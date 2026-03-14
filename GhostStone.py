@@ -9,4 +9,10 @@ class GhostStone:
         this.color = color
     
     def draw(this, drawSurface):
-        pygame.draw.circle(drawSurface, this.color, (this.x, this.y), this.radius)
+
+        print(this.color)
+        transSurface = pygame.Surface((2 * this.radius, 2 * this.radius), pygame.SRCALPHA)
+        pygame.draw.circle(transSurface, this.color, (this.x, this.y), this.radius)
+
+        
+        drawSurface.blit(transSurface, (this.x - this.radius, this.y - this.radius))

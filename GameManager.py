@@ -8,17 +8,21 @@ import Constants
 # For physics and real-time, go to Plane.
 # For collision physics, go to Stone.
 
-Laun
-SWEEPING = 20
+
+MENU = 10
+DELIVERY = 20
+SWEEPING = 30
+
 class GameManager:
     def __init__(this):
         this.plane = Plane.Plane(500, 50)
-        #this.playerMode = 
+        this.gameMode = DELIVERY
     
     def gameTick(this, keysPressed, drawSurface):
-        #for ghostStone in this.plane.ghostStones:
-            #ghostStone.draw(drawSurface)
-        this.plane.player.input(keysPressed[pygame.K_LEFT], keysPressed[pygame.K_RIGHT], keysPressed[pygame.K_w], keysPressed[pygame.K_s])
+        for ghostStone in this.plane.ghostStones:
+            ghostStone.draw(drawSurface)
+            
+        this.plane.player.input(keysPressed[pygame.K_a], keysPressed[pygame.K_d], keysPressed[pygame.K_w], keysPressed[pygame.K_s])
         this.plane.tick()
 
         for stone in this.plane.stones:
@@ -26,6 +30,8 @@ class GameManager:
 
         for vector in this.plane.vectors:
             vector.draw(drawSurface)
+
+        
         
         
 

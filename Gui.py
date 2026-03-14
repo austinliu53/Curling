@@ -29,11 +29,11 @@ class Gui:
 
         #Button 
         this.buttons = []
-        this.welcomeButton = Button.Button("Press this button to launch red stone up", 100, 100, 400, 100, isVisible=True, font="Times New Roman", fontSize=20)
-        this.welcomeButton.addEventListener(this)
-        this.buttons.append(this.welcomeButton)
+        this.startButton = Button.Button("Press this button to launch red stone up", 100, 100, 400, 100, isVisible=True, font="Times New Roman", fontSize=20)
+        this.startButton.addEventListener(this)
+        this.buttons.append(this.startButton)
 
-        this.uselessButton = Button.Button("Clicking me does nothing", 100, 200, 400, 100, isVisible=True, fontSize=20)
+        this.uselessButton = Button.Button("Clicking me does nothing", 100, 200, 400, 100, isVisible=True, fontSize=20, boxOpacity=255)
         this.buttons.append(this.uselessButton)
 
 
@@ -62,14 +62,15 @@ class Gui:
             #pygame.draw.rect(this.drawSurface, (255,0,0), rect,10,3)
             this.WINDOW.blit(this.drawSurface, (0, 0))
             pygame.display.flip()
-            this.drawSurface.fill((0, 0, 0))
+            this.drawSurface.fill(WHITE)
             this.clock.tick(Constants.FPS)
 
     def eventFrom(this, button):
-        if (button == this.welcomeButton):
+        if (button == this.startButton):
             this.gameManager.plane.start() 
+            this.gameManager.plane.gameMode = GameManager.MENU
 
-            this.welcomeButton.isVisible = False
+            this.startButton.isVisible = False
             this.uselessButton.isVisible = False
 
             #this.plane.addStone(30, 150, 430, 2, 0, RED)

@@ -10,7 +10,7 @@ class Button:
     clickEvent = False
     mouseDown = False
 
-    def __init__(this, text, x, y, width, height, fontSize = 12, font = "Helvetica", isVisible = False, textColor = BLACK, fillColor = GREY, borderColor = WHITE, borderRadius = 1, opacity = 1, alignLeft = False, alignUp = False):
+    def __init__(this, text, x, y, width, height, fontSize = 12, font = "Helvetica", isVisible = False, textColor = BLACK, fillColor = GREY, borderColor = WHITE, borderRadius = 1, boxOpacity : int = 255, alignLeft = False, alignUp = False):
 
         this.text = text
         this.x = x
@@ -24,7 +24,7 @@ class Button:
         this.fillColor = fillColor
         this.borderColor = borderColor
         this.borderRadius = borderRadius
-        this.opacity = opacity
+        this.boxOpacity = boxOpacity
         this.alignLeft = alignLeft
         this.alignUp = alignUp
         this.gui = None
@@ -67,26 +67,37 @@ class Button:
                     
                     this.fillColor[0] * Constants.CLICK_DIMMING, 
                     this.fillColor[1] * Constants.CLICK_DIMMING, 
-                    this.fillColor[2] * Constants.CLICK_DIMMING
+                    this.fillColor[2] * Constants.CLICK_DIMMING,
+                    this.boxOpacity
                 ) 
                 
             else:
+
                 realFillColor = (
 
                     min(this.fillColor[0] * Constants.HOVER_HIGHLIGHTING, 255), 
                     min(this.fillColor[1] * Constants.HOVER_HIGHLIGHTING, 255), 
-                    min(this.fillColor[2] * Constants.HOVER_HIGHLIGHTING, 255)
+                    min(this.fillColor[2] * Constants.HOVER_HIGHLIGHTING, 255),
+                    this.boxOpacity
                 )
 
         else:
-            realFillColor = this.fillColor
-        
+            realFillColor = (
+                this.fillColor[0],
+                this.fillColor[1],
+                this.fillColor[2],
+                this.boxOpacity
+            )
         pygame.draw.rect(drawSurface, this.borderColor, pygame.Rect(this.x - this.borderRadius, this.y - this.borderRadius, this.width + 2*this.borderRadius, this.height + 2*this.borderRadius), border_radius=this.borderRadius)
-        pygame.draw.rect(drawSurface, realFillColor, pygame.Rect(this.x, this.y, this.width, this.height))
-        font = pygame.font.SysFont(this.font, this.fontSize)
-        surface = font.render(this.text, True, this.textColor)
 
-        drawSurface.blit(surface, (this.x + this.width/2 - surface.get_width()/2, this.y + this.height/2 - surface.get_height()/2)) 
+        # Create a fontSurface of height and width and allow ALPHA (opacity)
+        rectSurface = pygame.Surface((this.width, this.height), pygame.SRCALPHA)
+        rectSurface.fill(realFillColor)
+        drawSurface.blit(rectSurface, (this.x, this.y))
+
+        font = pygame.font.SysFont(this.font, this.fontSize)
+        fontSurface = font.render(this.text, True, this.textColor)
+        drawSurface.blit(fontSurface, (this.x + this.width/2 - fontSurface.get_width()/2, this.y + this.height/2 - fontSurface.get_height()/2)) 
         
     def tick(this, mousePos, mouseDown):
 

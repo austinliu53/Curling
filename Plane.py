@@ -42,9 +42,10 @@ class Plane:
         
         this.ghostStones.append(GhostStone.GhostStone(stone.radius, stone.x, stone.y, 
             (
-                stone.color[0]* Constants.GHOST_DARKNESS, 
-                stone.color[1]* Constants.GHOST_DARKNESS, 
-                stone.color[2]* Constants.GHOST_DARKNESS
+                stone.color[0], 
+                stone.color[1], 
+                stone.color[2],
+                Constants.GHOST_OPACITY
             )    
         ))
 

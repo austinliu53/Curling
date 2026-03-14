@@ -22,9 +22,9 @@ class Player:
 
         this.stone.plane.addVector(this.vector)
 
-    def input(this, leftPressed, rightPressed, wPressed, sPressed):
+    def input(this, aPressed, dPressed, wPressed, sPressed):
 
-        this.stone.x += Constants.LAUNCH_MOVEMENT * (rightPressed - leftPressed)
+        this.stone.x += Constants.LAUNCH_MOVEMENT * (dPressed - aPressed)
         this.iVel -= (wPressed - sPressed) * 0.5
 
     def updateVecToPlayer(this):
