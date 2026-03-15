@@ -119,4 +119,10 @@ class Stone:
     def draw(this, drawSurface):
         pygame.draw.circle(drawSurface, this.color, (this.x, this.y), this.radius)
         #pygame.draw.aaline(drawSurface, BLACK, (this.x, this.y), (this.x + this.xVel * 4, this.y + this.yVel * 4))
- 
+    
+    def isOnPlane(this):
+        if (this.x < 0) or (this.x > this.plane.width) or (this.y < 0) or (this.y > this.plane.height):
+            return False
+        return True
+
+

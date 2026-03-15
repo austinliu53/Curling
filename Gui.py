@@ -32,13 +32,23 @@ class Gui:
         this.buttons = []
 
         #Welcome
-        this.welcomeLabel = Button.Button("Curling Simulator!", 100, 200, 400, 100, isVisible=True, fontSize=20, boxVisible=False)
+        this.welcomeLabel = Button.Button("Curling Arcade!", 200, 50, 400, 100, isVisible=True, fontSize=20, boxVisible=False)
         this.buttons.append(this.welcomeLabel)
 
-        this.welcomeButton = Button.Button("Start curling!", 100, 300, 400, 100, 18, isVisible=True)
+        this.explainLabel = Button.Button(
+            "Slide your stones, bump the opponent's stones out of the ring, and win points!",
+            200, 200, 400, 100, isVisible=True, boxVisible=False)
+        this.explainLabel.addEventListener(this)
+        this.buttons.append(this.explainLabel)
+                                          
+        this.welcomeButton = Button.Button("Start curling!", 200, 300, 400, 100, 18, isVisible=True)
         this.welcomeButton.addEventListener(this)
         this.buttons.append(this.welcomeButton)
         
+        # Curling works:
+
+        
+                                          
 
         #Start curling 
         
@@ -91,6 +101,9 @@ class Gui:
 
             this.startButton.isVisible = False
             
+
+        if (button == this.explainButton):
+            this.gameManager.gameMode = GameManager.EXPLANATION
 
 
 

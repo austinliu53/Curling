@@ -14,6 +14,9 @@ PRE_DELIVERY = 20
 #DELIVERY = 30
 SWEEPING = 40
 
+EXPLANATION = 50
+
+
 class GameManager:
     def __init__(this):
         this.plane = Plane.Plane(500, 50)
@@ -22,6 +25,9 @@ class GameManager:
     def gameTick(this, keysPressed, drawSurface):
 
         if (this.gameMode == MENU):
+            pass
+
+        if (this.gameMode == EXPLANATION):
             pass
         elif (this.gameMode == PRE_DELIVERY) or (this.gameMode == SWEEPING):
             for ghostStone in this.plane.ghostStones:
@@ -37,6 +43,7 @@ class GameManager:
 
             for vector in this.plane.vectors:
                 vector.draw(drawSurface)
+
 
             
             
