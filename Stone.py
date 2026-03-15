@@ -108,6 +108,8 @@ class Stone:
                     
                     this.plane.addGhostStone(this)
                     this.plane.addGhostStone(stone)
+
+
                     this.findNewVelocities(stone)
 
                     # Mark last collision to be this
@@ -116,5 +118,5 @@ class Stone:
 
     def draw(this, drawSurface):
         pygame.draw.circle(drawSurface, this.color, (this.x, this.y), this.radius)
-        pygame.draw.aaline(drawSurface, BLACK, (this.x, this.y), (this.x + this.xVel * 4, this.y + this.yVel * 4))
+        #pygame.draw.aaline(drawSurface, BLACK, (this.x, this.y), (this.x + this.xVel * 4, this.y + this.yVel * 4))
  

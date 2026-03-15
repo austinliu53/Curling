@@ -11,8 +11,9 @@ class GhostStone:
     def draw(this, drawSurface):
 
         print(this.color)
+        
         transSurface = pygame.Surface((2 * this.radius, 2 * this.radius), pygame.SRCALPHA)
         pygame.draw.circle(transSurface, this.color, (this.x, this.y), this.radius)
 
-        
+
         drawSurface.blit(transSurface, (this.x - this.radius, this.y - this.radius))

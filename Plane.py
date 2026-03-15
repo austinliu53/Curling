@@ -2,6 +2,7 @@ import Stone
 import GhostStone
 import Constants
 import Player
+import GameManager
 import numpy
 
 WHITE = (255, 255, 255)
@@ -44,14 +45,14 @@ class Plane:
             (
                 stone.color[0], 
                 stone.color[1], 
-                stone.color[2],
-                Constants.GHOST_OPACITY
+                stone.color[2]
+                #,Constants.GHOST_OPACITY
             )    
         ))
 
     def addVector(this, vector):
         this.vectors.append(vector)
-    def tick(this):
+    def tick(this, gamemode):
         
         for stone in this.stones: # Simulate each stone
 
@@ -69,7 +70,8 @@ class Plane:
                 stone.findCollision(this.stones)
                 stone.vector.updateToStone()    
             
-            this.player.updateVecToPlayer()
+            if (gamemode == GameManager.PRE_DELIVERY):
+                this.player.updateVecToPlayer()
 
 
 
@@ -78,6 +80,7 @@ class Plane:
 
     def start(this):
         this.redStone.setVelocity(0, this.player.iVel)
+        this.vectors.remove(this.player.vector)
 
 
                 

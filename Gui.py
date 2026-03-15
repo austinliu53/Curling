@@ -21,21 +21,30 @@ class Gui:
 
         this.drawSurface = pygame.Surface((this.WINDOW_WIDTH, this.WINDOW_HEIGHT))
         pygame.display.set_caption("Curling simulator") 
-        #Plane
+        #Initialize game manager
         this.gameManager = GameManager.GameManager()
-
+        
         #Clock
         this.clock = pygame.time.Clock()
 
-        #Button 
+        #Array of all our button
+
         this.buttons = []
-        this.startButton = Button.Button("Press this button to launch red stone up", 100, 100, 400, 100, isVisible=True, font="Times New Roman", fontSize=20)
+
+        #Welcome
+        this.welcomeLabel = Button.Button("Curling Simulator!", 100, 200, 400, 100, isVisible=True, fontSize=20, boxVisible=False)
+        this.buttons.append(this.welcomeLabel)
+
+        this.welcomeButton = Button.Button("Start curling!", 100, 300, 400, 100, 18, isVisible=True)
+        this.welcomeButton.addEventListener(this)
+        this.buttons.append(this.welcomeButton)
+        
+
+        #Start curling 
+        
+        this.startButton = Button.Button("Press this button to launch your stone in a direction.", 100, 100, 400, 100, isVisible=False, fontSize=15)
         this.startButton.addEventListener(this)
         this.buttons.append(this.startButton)
-
-        this.uselessButton = Button.Button("Clicking me does nothing", 100, 200, 400, 100, isVisible=True, fontSize=20, boxOpacity=255)
-        this.buttons.append(this.uselessButton)
-
 
     def gameLoop(this):
 
@@ -49,10 +58,11 @@ class Gui:
                 if event.type == pygame.QUIT:
                     running = False
 
+            Button.checkClicked(mousePressed[0])
             for button in this.buttons:
                 if button.isVisible:
                     button.draw(this.drawSurface)
-                    button.tick(mousePos, mousePressed[0])
+                    button.tick(mousePos)
 
 
             this.gameManager.gameTick(pygame.key.get_pressed(), this.drawSurface)
@@ -62,16 +72,28 @@ class Gui:
             #pygame.draw.rect(this.drawSurface, (255,0,0), rect,10,3)
             this.WINDOW.blit(this.drawSurface, (0, 0))
             pygame.display.flip()
-            this.drawSurface.fill(WHITE)
+            this.drawSurface.fill(GREY)
             this.clock.tick(Constants.FPS)
 
     def eventFrom(this, button):
+        
+        if (button == this.welcomeButton):
+
+            this.gameManager.gameMode = GameManager.PRE_DELIVERY
+            this.welcomeLabel.isVisible = False
+            this.welcomeButton.isVisible = False
+            this.startButton.isVisible = True
+            print("HELLO")
+
         if (button == this.startButton):
             this.gameManager.plane.start() 
-            this.gameManager.plane.gameMode = GameManager.MENU
+            this.gameManager.gameMode = GameManager.SWEEPING
 
             this.startButton.isVisible = False
-            this.uselessButton.isVisible = False
+            
+
+
+
 
             #this.plane.addStone(30, 150, 430, 2, 0, RED)
     

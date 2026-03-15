@@ -20,14 +20,13 @@ class Player:
             this.stone.plane
         )
 
-        this.stone.plane.addVector(this.vector)
-
     def input(this, aPressed, dPressed, wPressed, sPressed):
 
         this.stone.x += Constants.LAUNCH_MOVEMENT * (dPressed - aPressed)
         this.iVel -= (wPressed - sPressed) * 0.5
 
     def updateVecToPlayer(this):
+
         this.vector.x = this.stone.x
         this.vector.y = this.stone.y
         this.vector.xVector = math.sin(this.iAngle) * this.iVel

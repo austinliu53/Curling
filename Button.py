@@ -5,12 +5,25 @@ WHITE = (255, 255, 255)
 GREY = (127, 127, 127)
 BLACK = (0, 0, 0)
 
+def checkClicked(mouseDown):
+
+        if (mouseDown):
+            if (not Button.mouseDown):
+                Button.clickEvent = True
+            else:
+                Button.clickEvent = False
+            Button.mouseDown = True
+            return True
+        else:
+            Button.mouseDown = False
+            return True
+        
 class Button:
 
     clickEvent = False
     mouseDown = False
 
-    def __init__(this, text, x, y, width, height, fontSize = 12, font = "Helvetica", isVisible = False, textColor = BLACK, fillColor = GREY, borderColor = WHITE, borderRadius = 1, boxOpacity : int = 255, alignLeft = False, alignUp = False):
+    def __init__(this, text, x, y, width, height, fontSize = 12, font = "Helvetica", isVisible = False, textColor = BLACK, fillColor = GREY, borderColor = WHITE, borderRadius = 1, boxVisible = True, alignLeft = False, alignUp = False):
 
         this.text = text
         this.x = x
@@ -24,26 +37,14 @@ class Button:
         this.fillColor = fillColor
         this.borderColor = borderColor
         this.borderRadius = borderRadius
-        this.boxOpacity = boxOpacity
+        this.boxVisible = boxVisible
         this.alignLeft = alignLeft
         this.alignUp = alignUp
         this.gui = None
 
         this.isHoveredOn = False
 
-    def checkClicked(this, mouseDown):
-
-        if (mouseDown):
-            if (not Button.mouseDown):
-                Button.clickEvent = True
-                #print("MOUSE EVENT!!")
-            else:
-                Button.clickEvent = False
-            Button.mouseDown = True
-            return True
-        else:
-            Button.mouseDown = False
-            return True
+    
     
     def addEventListener(this, gui):
         this.gui = gui
@@ -60,49 +61,41 @@ class Button:
         
     def draw(this, drawSurface):
 
-        if (this.isHoveredOn):
+        
             
-            if (Button.mouseDown):
-                realFillColor = (
+        if (this.boxVisible):
+            if (this.isHoveredOn):
+                if (Button.mouseDown): # Hovered on + mousedown = dim (clicked button)
+                    realFillColor = (
+                        
+                        this.fillColor[0] * Constants.CLICK_DIMMING, 
+                        this.fillColor[1] * Constants.CLICK_DIMMING, 
+                        this.fillColor[2] * Constants.CLICK_DIMMING,
+                    ) 
                     
-                    this.fillColor[0] * Constants.CLICK_DIMMING, 
-                    this.fillColor[1] * Constants.CLICK_DIMMING, 
-                    this.fillColor[2] * Constants.CLICK_DIMMING,
-                    this.boxOpacity
-                ) 
-                
-            else:
+                else: # Hovered on + mouseup = highlight (hovered button)
 
-                realFillColor = (
+                    realFillColor = (
 
-                    min(this.fillColor[0] * Constants.HOVER_HIGHLIGHTING, 255), 
-                    min(this.fillColor[1] * Constants.HOVER_HIGHLIGHTING, 255), 
-                    min(this.fillColor[2] * Constants.HOVER_HIGHLIGHTING, 255),
-                    this.boxOpacity
-                )
+                        min(this.fillColor[0] * Constants.HOVER_HIGHLIGHTING, 255), 
+                        min(this.fillColor[1] * Constants.HOVER_HIGHLIGHTING, 255), 
+                        min(this.fillColor[2] * Constants.HOVER_HIGHLIGHTING, 255),
+                    )
 
-        else:
-            realFillColor = (
-                this.fillColor[0],
-                this.fillColor[1],
-                this.fillColor[2],
-                this.boxOpacity
-            )
-        pygame.draw.rect(drawSurface, this.borderColor, pygame.Rect(this.x - this.borderRadius, this.y - this.borderRadius, this.width + 2*this.borderRadius, this.height + 2*this.borderRadius), border_radius=this.borderRadius)
+            else: # Otherwise, make real fill color be the regular color
+                realFillColor = this.fillColor
 
-        # Create a fontSurface of height and width and allow ALPHA (opacity)
-        rectSurface = pygame.Surface((this.width, this.height), pygame.SRCALPHA)
-        rectSurface.fill(realFillColor)
-        drawSurface.blit(rectSurface, (this.x, this.y))
+            # Draw both rects
+            pygame.draw.rect(drawSurface, this.borderColor, pygame.Rect(this.x - this.borderRadius, this.y - this.borderRadius, this.width + 2*this.borderRadius, this.height + 2*this.borderRadius), border_radius=this.borderRadius)
+            pygame.draw.rect(drawSurface, realFillColor, pygame.Rect(this.x, this.y, this.width, this.height))
 
         font = pygame.font.SysFont(this.font, this.fontSize)
         fontSurface = font.render(this.text, True, this.textColor)
         drawSurface.blit(fontSurface, (this.x + this.width/2 - fontSurface.get_width()/2, this.y + this.height/2 - fontSurface.get_height()/2)) 
         
-    def tick(this, mousePos, mouseDown):
+    def tick(this, mousePos):
 
         this.checkHover(mousePos)
-        this.checkClicked(mouseDown)
         
         if (this.isHoveredOn and Button.clickEvent and this.gui != None):
             print("CLICK EVENT") # find a way to tell the GUI has been clicked
