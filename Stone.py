@@ -6,6 +6,7 @@ import Vector
 import pygame
 
 BLACK = (0, 0, 0)
+GREY = (127, 127, 127)
 
 class Stone:
 
@@ -19,12 +20,22 @@ class Stone:
         this.color = color
         this.plane = plane
         this.lastCollision = None
+        this.distanceToMiddle = 0
 
         this.vector = Vector.Vector(this.x, this.y, xVel, yVel, this, plane)
     
     def setVelocity(this, xVel, yVel):
         this.xVel = xVel
         this.yVel = yVel
+
+    def isOnPlane(this):
+        return (
+            (this.x < Constants.PLANE_X) or 
+            (this.x > Constants.PLANE_X + Constants.PLANE_WIDTH) or 
+            (this.y < Constants.PLANE_Y) or
+            (this.y > Constants.PLANE_Y + Constants.PLANE_LENGTH)
+        )
+
 
     def findNewVelocities(this, stone):
         
@@ -75,54 +86,59 @@ class Stone:
         #print("Stone velocity", stone.xVel, stone.yVel)
 
         return
+    
+    def isColliding(this, stone) -> bool: 
+        if (stone == this):
+            #print(":NNNOWEF")
+            return False
+    
+        #print("Finding collision")
+        dX = this.x - stone.x
+        dY = this.y - stone.y
+
+        dEuclidean = math.sqrt(dX ** 2 + dY ** 2)
+        #print(dEuclidean)
+
+        
+
+        dMin = this.radius + stone.radius # minimum distance for the stones to not be touching
+
+        if (dEuclidean > dMin):
+            return False
+        
+        #print(dEuclidean, dMin)
+        if (this.lastCollision != stone): # If this is a valid collision
+    
+            if ((stone.lastCollision == this)):
+                this.lastCollision = stone
+                return False
+        
+        return True
 
     def findCollision(this, stones):
 
         
         for stone in stones:
 
-            if (stone == this):
-                #print(":NNNOWEF")
-                continue
-        
-            #print("Finding collision")
-            dX = this.x - stone.x
-            dY = this.y - stone.y
-
-            dEuclidean = math.sqrt(dX ** 2 + dY ** 2)
-            #print(dEuclidean)
-
-            if (dEuclidean > 100):
-                continue
-
-            else:
-                dMin = this.radius + stone.radius # minimum distance for the stones to not be touching
-
-                #print(dEuclidean, dMin)
-                if (dEuclidean < dMin) and (this.lastCollision != stone): # If this is a valid collision
+            if (this.isColliding(stone)):
                     
-
-                    if ((stone.lastCollision == this)):
-                        this.lastCollision = stone
-                        continue
-                    
-                    this.plane.addGhostStone(this)
-                    this.plane.addGhostStone(stone)
+                this.plane.addGhostStone(this)
+                this.plane.addGhostStone(stone)
 
 
-                    this.findNewVelocities(stone)
+                this.findNewVelocities(stone)
 
-                    # Mark last collision to be this
-                    this.lastCollision = stone
-                    stone.lastCollision = this
+                # Mark last collision to be this
+                this.lastCollision = stone
+                stone.lastCollision = this
+
 
     def draw(this, drawSurface):
-        pygame.draw.circle(drawSurface, this.color, (this.x, this.y), this.radius)
+        pygame.draw.circle(drawSurface, GREY, (this.x, this.y), this.radius)
+        pygame.draw.circle(drawSurface, this.color, (this.x, this.y), this.radius - 2)
         #pygame.draw.aaline(drawSurface, BLACK, (this.x, this.y), (this.x + this.xVel * 4, this.y + this.yVel * 4))
     
-    def isOnPlane(this):
-        if (this.x < 0) or (this.x > this.plane.width) or (this.y < 0) or (this.y > this.plane.height):
-            return False
-        return True
+    
+
 
 

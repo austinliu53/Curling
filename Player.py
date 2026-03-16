@@ -8,7 +8,7 @@ class Player:
     def __init__(this, stone):
 
         this.stone = stone
-        this.iVel = Constants.INITIAL_LAUNCH
+        this.iVel = Constants.INITIAL_DELIVERY
         this.iAngle = math.pi # 180 degrees : down
 
         this.vector = Vector.Vector(
@@ -22,8 +22,12 @@ class Player:
 
     def input(this, aPressed, dPressed, wPressed, sPressed):
 
-        this.stone.x += Constants.LAUNCH_MOVEMENT * (dPressed - aPressed)
-        this.iVel -= (wPressed - sPressed) * 0.5
+        this.stone.x += Constants.X_MOVE_ACCEL * (dPressed - aPressed)
+        this.iVel -= (wPressed - sPressed) * Constants.DELIVERY_ACCEL
+
+        this.stone.x = max(Constants.PLANE_X, min(this.stone.x, Constants.PLANE_X + Constants.PLANE_WIDTH))
+        this.iVel = max(-Constants.PLAYER_MAX_VEL, min(this.iVel, 0))
+
 
     def updateVecToPlayer(this):
 

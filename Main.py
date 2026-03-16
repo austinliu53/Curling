@@ -1,5 +1,5 @@
 import Gui
-import Plane
+import asyncio
 
 WINDOW_WIDTH = 800
 WINDOW_HEIGHT = 800
@@ -16,6 +16,6 @@ WHITE = (255, 255, 255)
 def main():
 
     gui = Gui.Gui(WINDOW_WIDTH, WINDOW_HEIGHT)
-    gui.gameLoop()
+    asyncio.run(gui.gameLoop())
     
 main()

@@ -3,6 +3,8 @@ import Button
 import Stone
 import GameManager
 import Constants
+import asyncio
+
 
 WHITE = (255, 255, 255)
 GREY = (127, 127, 127)
@@ -20,7 +22,7 @@ class Gui:
         this.WINDOW = pygame.display.set_mode((this.WINDOW_WIDTH, this.WINDOW_HEIGHT))
 
         this.drawSurface = pygame.Surface((this.WINDOW_WIDTH, this.WINDOW_HEIGHT))
-        pygame.display.set_caption("Curling simulator") 
+        pygame.display.set_caption("Curling Arcade") 
         #Initialize game manager
         this.gameManager = GameManager.GameManager()
         
@@ -45,21 +47,32 @@ class Gui:
         this.welcomeButton.addEventListener(this)
         this.buttons.append(this.welcomeButton)
         
-        # Curling works:
-
-        
-                                          
+        # Curling works:                         
 
         #Start curling 
+
+        this.startButton = Button.Button("A and D keys to move left or right", 0, 300, 200, 200, isVisible=False, fontSize=12, boxVisible=False)
+        this.buttons.append(this.startButton)
+
+        this.startButton = Button.Button("W and S keys to control strength", 0, 300, 200, 200, isVisible=False, fontSize=12, boxVisible=False)
+        this.buttons.append(this.startButton)
         
-        this.startButton = Button.Button("Press this button to launch your stone in a direction.", 100, 100, 400, 100, isVisible=False, fontSize=15)
+        this.startButton = Button.Button("Press to launch", 0, 300, 200, 200, isVisible=False, fontSize=12)
         this.startButton.addEventListener(this)
         this.buttons.append(this.startButton)
 
-    def gameLoop(this):
+        #Score:
+
+    async def gameLoop(this):
+
+
 
         running = True
         while running: 
+
+
+            this.drawSurface.fill(GREY)
+            this.clock.tick(Constants.FPS)
 
             mousePos = pygame.mouse.get_pos()
             mousePressed = pygame.mouse.get_pressed()
@@ -82,31 +95,26 @@ class Gui:
             #pygame.draw.rect(this.drawSurface, (255,0,0), rect,10,3)
             this.WINDOW.blit(this.drawSurface, (0, 0))
             pygame.display.flip()
-            this.drawSurface.fill(GREY)
-            this.clock.tick(Constants.FPS)
+
+            await asyncio.sleep(0)
 
     def eventFrom(this, button):
         
         if (button == this.welcomeButton):
 
             this.gameManager.gameMode = GameManager.PRE_DELIVERY
+            this.gameManager.plane.generateStones()
             this.welcomeLabel.isVisible = False
             this.welcomeButton.isVisible = False
+            this.explainLabel.isVisible = False
             this.startButton.isVisible = True
-            print("HELLO")
 
         if (button == this.startButton):
-            this.gameManager.plane.start() 
+            this.gameManager.plane.startPhysics() 
             this.gameManager.gameMode = GameManager.SWEEPING
 
             this.startButton.isVisible = False
-            
-
-        if (button == this.explainButton):
-            this.gameManager.gameMode = GameManager.EXPLANATION
-
-
-
+        
 
             #this.plane.addStone(30, 150, 430, 2, 0, RED)
     
