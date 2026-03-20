@@ -23,7 +23,7 @@ class Button:
     clickEvent = False
     mouseDown = False
 
-    def __init__(this, text, x, y, width, height, fontSize = 12, font = "Helvetica", isVisible = False, textColor = BLACK, fillColor = GREY, borderColor = WHITE, borderRadius = 1, boxVisible = True, alignLeft = False, alignUp = False):
+    def __init__(this, text, x, y, width, height, fontSize = 12, font = "Helvetica", isVisible = False, textColor = BLACK, lineSpacing = 10, fillColor = GREY, borderColor = WHITE, borderRadius = 1, boxVisible = True, alignLeft = False, alignUp = False):
 
         this.text = text
         this.x = x
@@ -33,6 +33,7 @@ class Button:
         this.fontSize = fontSize
         this.font = font
         this.isVisible = isVisible
+        this.lineSpacing = lineSpacing
         this.textColor = textColor
         this.fillColor = fillColor
         this.borderColor = borderColor
@@ -90,15 +91,22 @@ class Button:
             pygame.draw.rect(drawSurface, realFillColor, pygame.Rect(this.x, this.y, this.width, this.height))
 
         font = pygame.font.SysFont(this.font, this.fontSize)
-        fontSurface = font.render(this.text, True, this.textColor)
-        drawSurface.blit(fontSurface, (this.x + this.width/2 - fontSurface.get_width()/2, this.y + this.height/2 - fontSurface.get_height()/2)) 
-        
+
+        if type(this.text) == str:
+            fontSurface = font.render(this.text, True, this.textColor)
+            drawSurface.blit(fontSurface, (this.x + this.width/2 - fontSurface.get_width()/2, this.y + this.height/2 - fontSurface.get_height()/2))
+        elif type(this.text) == list:
+
+            for i in range(len(this.text)):
+                fontSurface = font.render(this.text[i], True, this.textColor)
+                drawSurface.blit(fontSurface, (this.x + this.width/2 - fontSurface.get_width()/2, this.y + this.height/2 - fontSurface.get_height()/2 + i * (this.lineSpacing + this.fontSize) - len(this.text) * (this.lineSpacing + this.fontSize) / 2 + (this.lineSpacing + this.fontSize) / 2))
+
     def tick(this, mousePos):
 
         this.checkHover(mousePos)
         
         if (this.isHoveredOn and Button.clickEvent and this.gui != None):
-            print("CLICK EVENT") # find a way to tell the GUI has been clicked
+            #print("CLICK EVENT") # find a way to tell the GUI has been clicked
             this.gui.eventFrom(this)
             
         #print(this.isHoveredOn)

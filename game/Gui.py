@@ -11,9 +11,9 @@ GREY = (127, 127, 127)
 BLACK = (0, 0, 0)
 RED = (255, 0, 0)
 YELLOW = (255, 255, 0)
-
+GREEN = (0, 255, 0)
 class Gui:
-    def __init__(this, width, height):
+    def __init__(this, width : int, height : int):
         pygame.init()
 
         #Window
@@ -24,7 +24,7 @@ class Gui:
         this.drawSurface = pygame.Surface((this.WINDOW_WIDTH, this.WINDOW_HEIGHT))
         pygame.display.set_caption("Curling Arcade") 
         #Initialize game manager
-        this.gameManager = GameManager.GameManager()
+        this.gameManager = GameManager.GameManager(this)
         
         #Clock
         this.clock = pygame.time.Clock()
@@ -51,17 +51,17 @@ class Gui:
 
         #Start curling 
 
-        this.startButton = Button.Button("A and D keys to move left or right", 0, 300, 200, 200, isVisible=False, fontSize=12, boxVisible=False)
-        this.buttons.append(this.startButton)
+        this.controlsLabel = Button.Button(["A and D keys to move left or right", "W and S keys to control strength"], 0, 100, 200, 200, isVisible=False, fontSize=12, boxVisible=False)
+        this.buttons.append(this.controlsLabel)
 
-        this.startButton = Button.Button("W and S keys to control strength", 0, 300, 200, 200, isVisible=False, fontSize=12, boxVisible=False)
-        this.buttons.append(this.startButton)
-        
-        this.startButton = Button.Button("Press to launch", 0, 300, 200, 200, isVisible=False, fontSize=12)
+        this.startButton = Button.Button("Press to launch", 0, 300, 200, 200, fontSize=12, isVisible=False)
         this.startButton.addEventListener(this)
         this.buttons.append(this.startButton)
 
         #Score:
+        this.scoreButton = Button.Button([], 200, 400, 400, 200, fontSize=25, isVisible=False)
+        this.scoreButton.addEventListener(this)
+        this.buttons.append(this.scoreButton)
 
     async def gameLoop(this):
 
@@ -77,30 +77,28 @@ class Gui:
             mousePos = pygame.mouse.get_pos()
             mousePressed = pygame.mouse.get_pressed()
 
+            Button.checkClicked(mousePressed[0])
+            this.gameManager.gameTick(pygame.key.get_pressed(), this.drawSurface)
+
             for event in pygame.event.get(): # When the window closes, the program is not running
                 if event.type == pygame.QUIT:
                     running = False
 
-            Button.checkClicked(mousePressed[0])
+            
             for button in this.buttons:
                 if button.isVisible:
                     button.draw(this.drawSurface)
                     button.tick(mousePos)
 
-
-            this.gameManager.gameTick(pygame.key.get_pressed(), this.drawSurface)
-
-            #rect = pygame.Rect(0, 0, 100, 100)
-
-            #pygame.draw.rect(this.drawSurface, (255,0,0), rect,10,3)
             this.WINDOW.blit(this.drawSurface, (0, 0))
             pygame.display.flip()
 
             await asyncio.sleep(0)
 
-    def eventFrom(this, button):
+    def eventFrom(this, trigger):
         
-        if (button == this.welcomeButton):
+        if (trigger == this.welcomeButton):
+            
 
             this.gameManager.gameMode = GameManager.PRE_DELIVERY
             this.gameManager.plane.generateStones()
@@ -108,14 +106,28 @@ class Gui:
             this.welcomeButton.isVisible = False
             this.explainLabel.isVisible = False
             this.startButton.isVisible = True
+            this.controlsLabel.isVisible = True
+            
 
-        if (button == this.startButton):
+        if (trigger == this.startButton):
             this.gameManager.plane.startPhysics() 
             this.gameManager.gameMode = GameManager.SWEEPING
 
+            this.controlsLabel.isVisible = False
             this.startButton.isVisible = False
         
+        if (trigger == "Win"):
+            
+            this.scoreButton.text = ["You win! ", "Score: " + str(this.gameManager.plane.player.score), "Click to play again."]
+            this.scoreButton.textColor = GREEN
+            this.scoreButton.isVisible = True
+            
 
+        if (trigger == "Lose"):
+            
+            this.scoreButton.text = ["You lose!", "Click to play again"]
+            this.scoreButton.textColor = RED
+            this.scoreButton.isVisible = True
             #this.plane.addStone(30, 150, 430, 2, 0, RED)
     
             #this.plane.addStone(30, 250, 400, 0, 0, YELLOW)
@@ -124,6 +136,15 @@ class Gui:
 
             #this.plane.addStone(30, 400, 375, 0, 0, YELLOW)
             #this.plane.addStone(30, 400, 490, 0, 0, YELLOW)
+
+        if (trigger == this.scoreButton):
+            
+            this.gameManager.reset()
+
+            this.scoreButton.isVisible = False
+            this.explainLabel.isVisible = False
+            this.startButton.isVisible = True
+            this.controlsLabel.isVisible = True
 
             
 

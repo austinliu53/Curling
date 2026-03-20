@@ -6,13 +6,13 @@ import Plane
 
 BLACK = (0, 0, 0)
 class Vector:
-    def __init__(this, x : float, y :float, xVector : float, yVector : float, stone : Stone, plane : Plane):
+    def __init__(this, x : float, y : float, xVector : float, yVector : float, stone : Stone):
         this.x = x
         this.y = y
         this.xVector = xVector
         this.yVector = yVector
         this.stone = stone
-        plane.addVector(this)
+        this.stone.plane.vectors.append(this)
 
     def updateToStone(this):
         this.x = this.stone.x

@@ -1,28 +1,32 @@
-import math
-import Constants
 
+import Constants
 import Vector
+import Plane
 
 import pygame
+import math
 
 BLACK = (0, 0, 0)
 GREY = (127, 127, 127)
 
 class Stone:
 
-    def __init__(this, radius, x, y, xVel, yVel, color, plane):
+    def __init__(this, radius : float, x : float, y : float, xVel : float, yVel : float, color : tuple, plane : Plane, isRealStone : bool):
         this.radius = radius
         this.x = x
         this.y = y
         this.xVel = xVel
         this.yVel = yVel
-        this.friction = Constants.FRICTION
         this.color = color
         this.plane = plane
         this.lastCollision = None
         this.distanceToMiddle = 0
+        this.isRealStone = isRealStone
 
-        this.vector = Vector.Vector(this.x, this.y, xVel, yVel, this, plane)
+        if (this.isRealStone):
+            this.vector = Vector.Vector(this.x, this.y, xVel, yVel, this)
+        else:
+            this.vector = None
     
     def setVelocity(this, xVel, yVel):
         this.xVel = xVel
@@ -37,8 +41,7 @@ class Stone:
         )
 
 
-    def findNewVelocities(this, stone):
-        
+    def findNewVelocities(this, stone): # -> Returns List: This vector, stone vector        
         #print(this.color)
 
         # The strategy here is that we imagine the other stone is staying still
@@ -67,29 +70,26 @@ class Stone:
         # print("thisRelVelocityToStone", thisRelVelocityToStone)
 
         stoneNewVelocity = energyTransferred * thisRelVelocityToStone
-
-        thisNewVelocity = (1 - energyTransferred) * thisRelVelocityToStone
         
         tempStoneX = stone.xVel
         tempStoneY = stone.yVel
 
-        this.setVelocity(
-            stoneNewVelocity * (math.cos(collisionAngle)) + this.xVel, 
-            stoneNewVelocity * (math.sin(collisionAngle)) + this.yVel
-        )
-        
-        stone.setVelocity(
-            -stoneNewVelocity * (math.cos(collisionAngle)) + tempStoneX, 
-            -stoneNewVelocity * (math.sin(collisionAngle)) + tempStoneY
-        )
-
         #print("Stone velocity", stone.xVel, stone.yVel)
 
-        return
+        return [
+            [
+                stoneNewVelocity * (math.cos(collisionAngle)) + this.xVel, 
+                stoneNewVelocity * (math.sin(collisionAngle)) + this.yVel
+            ], 
+
+            [
+                -stoneNewVelocity * (math.cos(collisionAngle)) + tempStoneX, 
+                -stoneNewVelocity * (math.sin(collisionAngle)) + tempStoneY
+            ]
+        ]
     
     def isColliding(this, stone) -> bool: 
         if (stone == this):
-            #print(":NNNOWEF")
             return False
     
         #print("Finding collision")
@@ -99,34 +99,45 @@ class Stone:
         dEuclidean = math.sqrt(dX ** 2 + dY ** 2)
         #print(dEuclidean)
 
-        
-
         dMin = this.radius + stone.radius # minimum distance for the stones to not be touching
 
         if (dEuclidean > dMin):
             return False
         
+        if (not type(stone) == Stone): # If this is "Aim assist"
+            return True
+        
         #print(dEuclidean, dMin)
+
         if (this.lastCollision != stone): # If this is a valid collision
-    
-            if ((stone.lastCollision == this)):
+            
+            if (stone.lastCollision == this): 
                 this.lastCollision = stone
+                
                 return False
+            
+        else:
+            return False
         
         return True
 
     def findCollision(this, stones):
 
-        
         for stone in stones:
 
             if (this.isColliding(stone)):
-                    
-                this.plane.addGhostStone(this)
-                this.plane.addGhostStone(stone)
 
+                newVelocities = this.findNewVelocities(stone)
 
-                this.findNewVelocities(stone)
+                this.setVelocity(
+                    newVelocities[0][0],
+                    newVelocities[0][1]
+                )
+                
+                stone.setVelocity(
+                    newVelocities[1][0],
+                    newVelocities[1][1]
+                )
 
                 # Mark last collision to be this
                 this.lastCollision = stone
@@ -134,9 +145,26 @@ class Stone:
 
 
     def draw(this, drawSurface):
-        pygame.draw.circle(drawSurface, GREY, (this.x, this.y), this.radius)
-        pygame.draw.circle(drawSurface, this.color, (this.x, this.y), this.radius - 2)
+
+        if (this.isRealStone):
+            pygame.draw.circle(drawSurface, GREY, (this.x, this.y), this.radius)
+            pygame.draw.circle(drawSurface, this.color, (this.x, this.y), this.radius - 2)
+
+            font = pygame.font.SysFont("Helvetica", 10)
+            fontSurface = font.render(str(math.floor(this.distanceToMiddle)), True, BLACK)
+            drawSurface.blit(fontSurface, (this.x - this.radius/2, this.y - this.radius/2))
+
+        else:
+            pygame.draw.circle(drawSurface, this.color, (this.x, this.y), this.radius, 2)
         #pygame.draw.aaline(drawSurface, BLACK, (this.x, this.y), (this.x + this.xVel * 4, this.y + this.yVel * 4))
+    
+    def ghostCopy(this):
+        stone = Stone(this.radius, this.x, this.y, this.xVel, this.yVel, this.color, this.plane, False)
+        return stone
+
+    def equals(this, stone):
+        #i heart cp
+        return stone.radius == this.radius and stone.x == this.x and stone.y == this.y and stone.xVel == this.xVel and stone.yVel == this.yVel and stone.color == this.color and stone.plane == this.plane# and stone.lastCollision == this.lastCollision and stone.distanceToMiddle == this.distanceToMiddle and stone.isRealStone == this.isRealStone
     
     
 

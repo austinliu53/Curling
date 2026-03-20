@@ -1,5 +1,4 @@
 import Stone
-import GhostStone
 import Constants
 import Player
 import GameManager
@@ -15,7 +14,7 @@ YELLOW = (255, 255, 0)
 BLUE = (0, 0, 255)
 
 class Plane:
-    def __init__(this, x, y, width, length): # A curling alley is long and narrow. 
+    def __init__(this, x : float, y : float, width : float, length : float): # A curling alley is long and narrow. 
         this.x = x
         this.y = y
         this.length = length
@@ -25,55 +24,128 @@ class Plane:
         this.vectors = []
         this.stoneActive = False
 
-
-
         # Initializing the stones 
-        this.redStone = Stone.Stone(Constants.STONE_RADIUS, 400, 700, 0, 0, RED, this)
-        this.stones.append(this.redStone)
+        this.playerStone = Stone.Stone(Constants.STONE_RADIUS, 400, 700, 0, 0, RED, this, True)
+        this.stones.append(this.playerStone)
 
         # Initializing player
 
-        this.player = Player.Player(this.redStone)
+        this.player = Player.Player(this.playerStone)
+    
+    def predictPosition(this, movingStone, movingVelocity) -> list:
 
-    def addStone(this, stone):
-        this.stones.append(stone)
+        stoneActive = True
 
-    def addGhostStone(this, stone):
+        # What I'm doing here is that I'm making the player's stone velocity, and then I will copy the array of stones, and then reset the player stone's velocity to 0.
+        # This will make a copy of the array, but with a moving player stone. 
+        # The original this.stones will remain unchanged.
+
+        stones = []
+        for i in range(len(this.stones)):
+
+            stones.append(this.stones[i].ghostCopy())
+
+            
+            if (stones[i].equals(movingStone)):
+
+                stones[i].yVel = movingVelocity[1]
+
+            #if (stones[i] == None):
+            #    print("you dum")
         
-        this.ghostStones.append(GhostStone.GhostStone(stone.radius, stone.x, stone.y, 
-            (
-                stone.color[0], 
-                stone.color[1], 
-                stone.color[2]
-                #,Constants.GHOST_OPACITY
-            )    
-        ))
 
-    def addVector(this, vector):
-        this.vectors.append(vector)
+        while (stoneActive):
+            
+            stoneActive = False
+            
+            for stone in stones: # Simulate each stone
+
+                # Find the velocity, regardless of direction
+                stoneVel = stone.xVel ** 2 + stone.yVel ** 2
+
+                if (stoneVel != 0):
+                    stoneActive = True
+
+                # Move the stone based off of its velocity
+                stone.x += stone.xVel
+                stone.y += stone.yVel
+
+                # Reduce the velocity using friction
+                stone.xVel *= (1 - Constants.FRICTION)
+                stone.yVel *= (1 - Constants.FRICTION)
+
+                # Detect off-plane stones, and remove them
+                if (stone.isOnPlane()):
+                    stones.remove(stone)
+
+                # If a stone is slow enough, just stop it.
+                if (math.sqrt((stone.xVel ** 2) + (stone.yVel ** 2)) < Constants.MIN_VEL_TOLERANCE):
+                    stone.xVel = 0
+                    stone.yVel = 0
+            
+                # Detect collisions for this stone
+                if (stone.xVel != 0 or stone.yVel != 0): # If the stone is moving
+                    stone.findCollision(stones)
+
+        for stone in stones: # Set the stone.distance
+            # Find the distance of this stone to the middle
+            stone.isRealStone = False
+            xFromMiddle = stone.x - Constants.CIRCLE_CENTER[0]
+            yFromMiddle = stone.y - Constants.CIRCLE_CENTER[1]
+            stone.distanceToMiddle = math.sqrt(xFromMiddle ** 2 + yFromMiddle ** 2)
+
+        #print(stones == this.stones)
+        
+        return stones
+            # print(stone.yVel)
+        # print("stones.append line 21", len(this.stones))
+    
     def tick(this, gamemode):
 
         this.stoneActive = False
         
         for stone in this.stones: # Simulate each stone
+
+            # Find the distance of this stone to the middle
             
+            xFromMiddle = stone.x - Constants.CIRCLE_CENTER[0]
+            yFromMiddle = stone.y - Constants.CIRCLE_CENTER[1]
+
+            stone.distanceToMiddle = math.sqrt(xFromMiddle ** 2 + yFromMiddle ** 2)
+
+            # Find the velocity, regardless of direction
             stoneVel = stone.xVel ** 2 + stone.yVel ** 2
             if (stoneVel != 0):
                 this.stoneActive = True
 
+            # Move the stone based off of its velocity
             stone.x += stone.xVel
             stone.y += stone.yVel
 
-            stone.xVel *= (1 - stone.friction)
-            stone.yVel *= (1 - stone.friction)
+            # Reduce the velocity using friction
+            stone.xVel *= (1 - Constants.FRICTION)
+            stone.yVel *= (1 - Constants.FRICTION)
 
+            # Detect off-plane stones, and remove them
+
+            #print(len(this.vectors))
+            #print(len(this.stones))
             if (stone.isOnPlane()):
-                this.stones.remove(stone)
-                this.vectors.remove(stone.vector)
-            if ((stone.xVel ** 2) + (stone.yVel ** 2) < Constants.MIN_VEL_TOLERANCE):
+
+                try:
+                    this.stones.remove(stone)
+
+                    if (stone.isRealStone):
+                        this.vectors.remove(stone.vector)
+                except:
+                    pass
+            
+            # If a stone is slow enough, just stop it.
+            if (math.sqrt((stone.xVel ** 2) + (stone.yVel ** 2)) < Constants.MIN_VEL_TOLERANCE):
                 stone.xVel = 0
                 stone.yVel = 0
         
+            # Detect collisions for this stone
             if (stone.xVel != 0 or stone.yVel != 0): # If the stone is moving
                 stone.findCollision(this.stones)
                 stone.vector.updateToStone()    
@@ -81,12 +153,11 @@ class Plane:
             if (gamemode == GameManager.PRE_DELIVERY):
                 this.player.updateVecToPlayer()
 
-
-            # print(stone.yVel)
-        # print("stones.append line 21", len(this.stones))
+            
+    
 
     def startPhysics(this):
-        this.redStone.setVelocity(0, this.player.iVel)
+        this.playerStone.setVelocity(0, this.player.iVel)
         this.vectors.remove(this.player.vector)
 
     def draw(this, drawSurface):
@@ -99,23 +170,22 @@ class Plane:
         
     def generateStones(this):
         
+        this.stones = [this.playerStone]
         numStones = random.randint(2, 5)
 
         for i in range(numStones):
 
-            if (i % 2 == 1):
-                stoneColor = RED
-            else:
+            if random.randint(0, 4) > 0:
                 stoneColor = YELLOW
+            else:
+                stoneColor = RED
             
-            
-
 
             while (True):
                 x = this.x + random.randint(Constants.STONE_RADIUS, this.width - Constants.STONE_RADIUS)
                 y = (this.y + random.randint(Constants.STONE_RADIUS, Constants.STONE_SPAWN_Y_LIMIT - Constants.STONE_RADIUS))
 
-                tempStone = Stone.Stone(Constants.STONE_RADIUS, x, y, 0, 0, stoneColor, this)
+                tempStone = Stone.Stone(Constants.STONE_RADIUS, x, y, 0, 0, stoneColor, this, True)
 
                 hasCollision = False
 
@@ -125,38 +195,86 @@ class Plane:
                 
                 if not hasCollision:
                     break
-            
-            this.stones.append(Stone.Stone(Constants.STONE_RADIUS, x, y, 0, 0, stoneColor, this))
 
-    """
+                #this.stones.remove(tempStone)
+            
+            this.stones.append(Stone.Stone(Constants.STONE_RADIUS, x, y, 0, 0, stoneColor, this, True))
+        
+    
+
+
+
     def calcScore(this):
         # Find the nearest stone.
+        try:
+            sortedStones = [this.stones[0]]
+        except:
+            # This means that there is no item in this.stones
+            this.player.setScore(0, False)
+            return
 
-        closestStone = None # placeholder
-
-        sortedStones = []
-
+        # Sort all the stones by their distance using insertion sort
         for stone in this.stones:
-
-            xFromMiddle = stone.x - Constants.CIRCLE_CENTER[0]
-            yFromMiddle = stone.y - Constants.CIRCLE_CENTER[1]
-
-            stone.distanceToMiddle = math.sqrt(xFromMiddle ** 2 + yFromMiddle ** 2)
-
-            if len(sortedStones) == 0:
-                sortedStones.append(stone)
-
+            for i in range(len(sortedStones)):
+                if sortedStones[i].distanceToMiddle > stone.distanceToMiddle:
+                    sortedStones.insert(i, stone)
+                    break
                 
-            for stone in sortedStones:
-                if sortedStones:
+                if i == len(sortedStones) - 1:
+                    sortedStones.append(stone)
 
-
+        print("")
+        
         # Get the team of the closest stone
-        color = closestStone.color
+        
+        if (len(sortedStones) > 0 and sortedStones.__contains__(this.stones[0])):
+            sortedStones.remove(this.stones[0])
+        
+        # Pass through the sortedStones list until 
+        # the stone is outside of the list
+        # or the stone is not the winning team.
 
-        if (color = )
+        winningTeam = sortedStones[0].color
+        print("Winning team:", winningTeam)
+        winningPoints = 0
 
-    """
+        for sortedStone in sortedStones:
+
+            if (sortedStone.color != winningTeam):
+                break
+                
+            if (sortedStone.distanceToMiddle > Constants.BLUE_CIRCLE_RADIUS + Constants.STONE_RADIUS):
+                break
+
+            print(sortedStone.color)
+
+            winningPoints += 1
+        
+        print("winningPoints", winningPoints)
+
+        if (winningTeam == YELLOW):
+            winningPoints *= -1
+
+        this.player.score = winningPoints
+
+    def reset(this):
+
+        this.stones = []
+        this.ghostStones = []
+        this.vectors = []
+        this.stoneActive = False
+
+        # Initializing the stones 
+        this.playerStone = Stone.Stone(Constants.STONE_RADIUS, 400, 700, 0, 0, RED, this, True)
+        this.stones.append(this.playerStone)
+
+        # Initializing player
+        this.player = Player.Player(this.playerStone)
+    
+            
+
+
+
         
 
             
