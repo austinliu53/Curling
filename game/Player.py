@@ -5,7 +5,6 @@ import Constants
 import Vector
 import AimAssist
 
-WHITE = (255, 255, 255)
 class Player:
     def __init__(this, stone: Stone):
 
@@ -31,6 +30,7 @@ class Player:
 
         this.stone.x = max(Constants.PLANE_X, min(this.stone.x, Constants.PLANE_X + Constants.PLANE_WIDTH))
         this.iVel = max(-Constants.PLAYER_MAX_VEL, min(this.iVel, 0))
+        #print(this.iVel)
 
     def updateVecToPlayer(this):
 

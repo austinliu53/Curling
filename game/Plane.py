@@ -1,6 +1,7 @@
 import Stone
 import Constants
 import Player
+import Vector
 import GameManager
 
 import pygame
@@ -25,13 +26,168 @@ class Plane:
         this.stoneActive = False
 
         # Initializing the stones 
-        this.playerStone = Stone.Stone(Constants.STONE_RADIUS, 400, 700, 0, 0, RED, this, True)
+        this.playerStone = Stone.Stone(Constants.STONE_RADIUS, -400, 700, 0, 0, RED, this, True)
         this.stones.append(this.playerStone)
+
+        this.clankaStone = None 
 
         # Initializing player
 
         this.player = Player.Player(this.playerStone)
     
+
+    def startPhysics(this):
+        this.playerStone.setVelocity(0, this.player.iVel)
+        this.vectors.remove(this.player.vector)
+
+    def draw(this, drawSurface):
+        pygame.draw.rect(drawSurface, GREY, (this.x, this.y, this.width, this.length))
+
+        pygame.draw.circle(drawSurface, BLUE, Constants.CIRCLE_CENTER, Constants.BLUE_CIRCLE_RADIUS)
+        pygame.draw.circle(drawSurface, WHITE, Constants.CIRCLE_CENTER, Constants.WHITE_CIRCLE_RADIUS)
+        pygame.draw.circle(drawSurface, RED, Constants.CIRCLE_CENTER, Constants.RED_CIRCLE_RADIUS)
+        pygame.draw.circle(drawSurface, YELLOW, Constants.CIRCLE_CENTER, Constants.YELLOW_CIRCLE_RADIUS)
+        
+    
+    def generateStones(this):
+        
+        this.stones = [this.playerStone]
+        numStones = random.randint(2, 5)
+
+        for i in range(numStones):
+
+            if random.randint(0, 4) > 0:
+                stoneColor = YELLOW
+            else:
+                stoneColor = RED
+            
+
+            while (True):
+                x = this.x + random.randint(Constants.STONE_RADIUS, this.width - Constants.STONE_RADIUS)
+                y = (this.y + random.randint(Constants.STONE_RADIUS, Constants.STONE_SPAWN_Y_LIMIT - Constants.STONE_RADIUS))
+
+                tempStone = Stone.Stone(Constants.STONE_RADIUS, x, y, 0, 0, stoneColor, this, True)
+
+                hasCollision = False
+
+                for stone in this.stones:
+                    if tempStone.isColliding(stone):
+                        hasCollision = True
+                
+                if not hasCollision:
+                    break
+
+                #this.stones.remove(tempStone)
+            
+            this.stones.append(Stone.Stone(Constants.STONE_RADIUS, x, y, 0, 0, stoneColor, this, True))
+        
+    def addclankaStone(this):
+
+        this.clankaStone = Stone.Stone(Constants.STONE_RADIUS, 400, 700, 0, 0, YELLOW, this, True)
+
+        this.stones.append(this.clankaStone)
+
+        pos = this.findOptimal()
+
+        this.clankaStone.yVel = pos[0]
+        this.clankaStone.x = pos[1]
+        
+        
+        #print(len(this.stones))
+
+    def addPlayerStone(this):
+        this.playerStone = Stone.Stone(Constants.STONE_RADIUS, 400, 700, 0, 0, RED, this, True)
+        this.stones.append(this.playerStone)
+        this.player.stone = this.playerStone
+        this.player.vector = Vector.Vector(
+            this.playerStone.x,
+            this.playerStone.y,
+            0,
+            Constants.INITIAL_DELIVERY,
+            this.playerStone
+        )
+
+    def reset(this):
+
+        this.stones = []
+        this.ghostStones = []
+        this.vectors = []
+        this.stoneActive = False
+
+        # Initializing the stones 
+        this.playerStone = Stone.Stone(Constants.STONE_RADIUS, 400, 700, 0, 0, RED, this, True)
+        this.stones.append(this.playerStone)
+
+        # Initializing player
+        this.player = Player.Player(this.playerStone)
+
+    def sortStonesDistance(this, stones):
+
+        # Find the nearest stone.
+        try:
+            sortedStones = [stones[0]]
+        except:
+            # This means that there is no item in stones
+            this.player.score = 0
+            return []
+
+        # Sort all the stones by their distance using insertion sort
+        for stone in stones:
+            for i in range(len(sortedStones)):
+                if sortedStones[i].distanceToMiddle > stone.distanceToMiddle:
+                    sortedStones.insert(i, stone)
+                    break
+                
+                if i == len(sortedStones) - 1:
+                    sortedStones.append(stone)
+
+        #print("")
+        
+        # Get the team of the closest stone
+        
+        if (len(sortedStones) > 0 and sortedStones.__contains__(this.stones[0])): # Add the length first for a bit of memory optimization
+            sortedStones.remove(this.stones[0])
+        
+        return sortedStones
+    
+
+
+    def calcScore(this, stones):
+
+        sortedStones = this.sortStonesDistance(stones)
+        
+        # Pass through the sortedStones list until 
+        # the stone is outside of the list
+        # or the stone is not the winning team.
+
+        if (len(sortedStones) == 0):
+            return 0
+        
+        winningTeam = sortedStones[0].color
+        #print("Winning team:", winningTeam)
+        winningPoints = 0
+
+        for sortedStone in sortedStones:
+
+            if (sortedStone.color != winningTeam):
+                break
+                
+            if (sortedStone.distanceToMiddle > Constants.BLUE_CIRCLE_RADIUS + Constants.STONE_RADIUS):
+                break
+
+            #print(sortedStone.color)
+
+            winningPoints += 1
+        
+        #print("winningPoints", winningPoints)
+
+        if (winningTeam == YELLOW):
+            winningPoints *= -1
+
+        this.player.score = winningPoints
+
+        return winningPoints
+
     def predictPosition(this, movingStone, movingVelocity) -> list:
 
         stoneActive = True
@@ -50,13 +206,15 @@ class Plane:
 
                 stones[i].yVel = movingVelocity[1]
 
+                #print(movingVelocity[1], "helo")
+
             #if (stones[i] == None):
-            #    print("you dum")
-        
+
 
         while (stoneActive):
             
             stoneActive = False
+
             
             for stone in stones: # Simulate each stone
 
@@ -100,6 +258,134 @@ class Plane:
             # print(stone.yVel)
         # print("stones.append line 21", len(this.stones))
     
+    def positionPoints(this, stones): # This number is based off of the overall position of the player. The worse position for the player, the more the clanka will play.
+
+        # Find how much points you got.
+        endPoints = this.calcScore(stones)
+
+        points = 1000 * endPoints 
+
+        for stone in stones:
+
+            if (stone.color == RED):
+                if stone.distanceToMiddle <= 2 * stone.radius + Constants.BLUE_CIRCLE_RADIUS:
+                    points += 500
+                points += stone.stoneEffectiveness()
+            else:
+                if stone.distanceToMiddle <= 2 * stone.radius + Constants.BLUE_CIRCLE_RADIUS:
+                    points -= 500
+                points -= stone.stoneEffectiveness()
+            
+        return points
+    
+    def findStoneExtremes(this, stones, excludedStone):
+        
+        minX = math.inf
+        maxX = -math.inf
+
+        minY = math.inf
+        maxY = -math.inf
+
+        for stone in stones:
+
+            if not stone.equals(excludedStone):
+                if stone.x <= minX:
+                    minX = stone.x
+                if stone.x >= maxX:
+                    maxX = stone.x
+                if stone.y <= minY:
+                    minY = stone.y
+                if stone.y >= maxY:
+                    maxY = stone.y
+
+        return [[minX, maxX], [minY, maxY]]
+    
+    def findOptimal(this): # This algorithm gets the scoring of all potential positions, and finds which one helps the bot's position the most.
+
+        # Firstly, we will do coarse calculations for every shot that is not going to collide. 
+        # Next, there will be 100% percent accuracy calculations for shots that will collide.
+        
+        optimalPoints = -math.inf
+        optimalShot = (0, Constants.PLANE_X)
+
+        iVel = 0
+        this.clankaStone.x = 0
+
+        passes = 0
+        positionsCalculated = 0
+
+        while iVel <= Constants.PLAYER_MAX_VEL:
+            
+            launchX = Constants.PLANE_X # All the way left.
+
+            while launchX <= Constants.PLANE_X + Constants.PLANE_WIDTH:
+                passes += 1
+
+                predictPosition = this.predictPosition(this.clankaStone, [0, -iVel])
+                points = -this.positionPoints(predictPosition)
+
+                positionsCalculated += 1
+                
+                #print("points", points, iVel)
+                if (points > optimalPoints):
+                    #print(launchX, iVel, points, len(this.stones))
+    
+                    optimalPoints = points
+                    optimalShot = (iVel, launchX)
+
+                launchX += 10 * Constants.X_MOVE_ACCEL
+
+                this.clankaStone.x = launchX
+
+            iVel += Constants.DELIVERY_ACCEL * 60
+
+        # Reset the theoretical position for another finer comb
+        iVel = 0
+        this.clankaStone.x = 0
+
+        previousStones = [stone for stone in this.stones if stone != this.clankaStone] # the current stones that exclude the clanka stone
+        # print(len(previousStones))
+        # Finer comb
+        while iVel <= Constants.PLAYER_MAX_VEL:
+            
+            launchX = Constants.PLANE_X 
+
+            while launchX <= Constants.PLANE_X + Constants.PLANE_WIDTH:
+                
+                passes += 1
+
+                for stone in previousStones:
+
+                    predictY = this.clankaStone.y - (iVel / Constants.FRICTION)
+
+                    if stone.willThisShadow(this.clankaStone.x, predictY, Constants.STONE_RADIUS): # If it will collide
+                        #print("stone pos", stone.x, stone.y, "this pos", this.clankaStone.x, predictY)
+                        predictPosition = this.predictPosition(this.clankaStone, [0, -iVel])
+                        points = -this.positionPoints(predictPosition)
+                        positionsCalculated += 1
+                        #print(positionsCalculated)
+                
+                        #print("points", points, iVel)
+                        if (points > optimalPoints):
+                            #print(launchX, iVel, points, len(this.stones))
+            
+                            optimalPoints = points
+                            optimalShot = (iVel, launchX)
+                    
+
+                launchX += Constants.X_MOVE_ACCEL * 1
+
+                this.clankaStone.x = launchX
+
+            iVel += Constants.DELIVERY_ACCEL * 2
+
+        print("Optimal points: ", optimalPoints)
+        print("passes", passes)
+        print("positionsCalculated", positionsCalculated)
+        # Record: 15093 passes
+
+        return (-optimalShot[0], optimalShot[1])
+            
     def tick(this, gamemode):
 
         this.stoneActive = False
@@ -115,6 +401,8 @@ class Plane:
 
             # Find the velocity, regardless of direction
             stoneVel = stone.xVel ** 2 + stone.yVel ** 2
+
+            #print(stone.x, stone.y, stoneVel)
             if (stoneVel != 0):
                 this.stoneActive = True
 
@@ -126,10 +414,10 @@ class Plane:
             stone.xVel *= (1 - Constants.FRICTION)
             stone.yVel *= (1 - Constants.FRICTION)
 
-            # Detect off-plane stones, and remove them
-
+            #Detect off-plane stones, and remove them
             #print(len(this.vectors))
             #print(len(this.stones))
+
             if (stone.isOnPlane()):
 
                 try:
@@ -148,130 +436,13 @@ class Plane:
             # Detect collisions for this stone
             if (stone.xVel != 0 or stone.yVel != 0): # If the stone is moving
                 stone.findCollision(this.stones)
-                stone.vector.updateToStone()    
+                stone.vector.updateToStone()
             
-            if (gamemode == GameManager.PRE_DELIVERY):
+            if (gamemode == GameManager.PLAYER_DELIVERY):
                 this.player.updateVecToPlayer()
 
             
     
-
-    def startPhysics(this):
-        this.playerStone.setVelocity(0, this.player.iVel)
-        this.vectors.remove(this.player.vector)
-
-    def draw(this, drawSurface):
-        pygame.draw.rect(drawSurface, WHITE, (this.x, this.y, this.width, this.length))
-
-        pygame.draw.circle(drawSurface, BLUE, Constants.CIRCLE_CENTER, Constants.BLUE_CIRCLE_RADIUS)
-        pygame.draw.circle(drawSurface, WHITE, Constants.CIRCLE_CENTER, Constants.WHITE_CIRCLE_RADIUS)
-        pygame.draw.circle(drawSurface, RED, Constants.CIRCLE_CENTER, Constants.RED_CIRCLE_RADIUS)
-        pygame.draw.circle(drawSurface, YELLOW, Constants.CIRCLE_CENTER, Constants.YELLOW_CIRCLE_RADIUS)
-        
-    def generateStones(this):
-        
-        this.stones = [this.playerStone]
-        numStones = random.randint(2, 5)
-
-        for i in range(numStones):
-
-            if random.randint(0, 4) > 0:
-                stoneColor = YELLOW
-            else:
-                stoneColor = RED
-            
-
-            while (True):
-                x = this.x + random.randint(Constants.STONE_RADIUS, this.width - Constants.STONE_RADIUS)
-                y = (this.y + random.randint(Constants.STONE_RADIUS, Constants.STONE_SPAWN_Y_LIMIT - Constants.STONE_RADIUS))
-
-                tempStone = Stone.Stone(Constants.STONE_RADIUS, x, y, 0, 0, stoneColor, this, True)
-
-                hasCollision = False
-
-                for stone in this.stones:
-                    if tempStone.isColliding(stone):
-                        hasCollision = True
-                
-                if not hasCollision:
-                    break
-
-                #this.stones.remove(tempStone)
-            
-            this.stones.append(Stone.Stone(Constants.STONE_RADIUS, x, y, 0, 0, stoneColor, this, True))
-        
-    
-
-
-
-    def calcScore(this):
-        # Find the nearest stone.
-        try:
-            sortedStones = [this.stones[0]]
-        except:
-            # This means that there is no item in this.stones
-            this.player.setScore(0, False)
-            return
-
-        # Sort all the stones by their distance using insertion sort
-        for stone in this.stones:
-            for i in range(len(sortedStones)):
-                if sortedStones[i].distanceToMiddle > stone.distanceToMiddle:
-                    sortedStones.insert(i, stone)
-                    break
-                
-                if i == len(sortedStones) - 1:
-                    sortedStones.append(stone)
-
-        print("")
-        
-        # Get the team of the closest stone
-        
-        if (len(sortedStones) > 0 and sortedStones.__contains__(this.stones[0])):
-            sortedStones.remove(this.stones[0])
-        
-        # Pass through the sortedStones list until 
-        # the stone is outside of the list
-        # or the stone is not the winning team.
-
-        winningTeam = sortedStones[0].color
-        print("Winning team:", winningTeam)
-        winningPoints = 0
-
-        for sortedStone in sortedStones:
-
-            if (sortedStone.color != winningTeam):
-                break
-                
-            if (sortedStone.distanceToMiddle > Constants.BLUE_CIRCLE_RADIUS + Constants.STONE_RADIUS):
-                break
-
-            print(sortedStone.color)
-
-            winningPoints += 1
-        
-        print("winningPoints", winningPoints)
-
-        if (winningTeam == YELLOW):
-            winningPoints *= -1
-
-        this.player.score = winningPoints
-
-    def reset(this):
-
-        this.stones = []
-        this.ghostStones = []
-        this.vectors = []
-        this.stoneActive = False
-
-        # Initializing the stones 
-        this.playerStone = Stone.Stone(Constants.STONE_RADIUS, 400, 700, 0, 0, RED, this, True)
-        this.stones.append(this.playerStone)
-
-        # Initializing player
-        this.player = Player.Player(this.playerStone)
-    
-            
 
 
 

@@ -43,12 +43,21 @@ class Gui:
         this.explainLabel.addEventListener(this)
         this.buttons.append(this.explainLabel)
                                           
-        this.welcomeButton = Button.Button("Start curling!", 200, 300, 400, 100, 18, isVisible=True)
+        this.welcomeButton = Button.Button("Play against clanka", 200, 300, 400, 100, 18, isVisible=True)
         this.welcomeButton.addEventListener(this)
         this.buttons.append(this.welcomeButton)
         
-        # Curling works:                         
+        # So, play first or play second ????
+        this.playFirstButton = Button.Button(["Play first", "(This is harder)"], 200, 400, 400, 100, 18, isVisible=False)
+        this.playFirstButton.addEventListener(this)
+        this.buttons.append(this.playFirstButton)
 
+        this.playSecondButton = Button.Button(["Play second", "(This is easier)"], 200, 500, 400, 100, 18, isVisible=False)
+        this.playSecondButton.addEventListener(this)
+        this.buttons.append(this.playSecondButton)
+
+        # Curling works:   
+        
         #Start curling 
 
         this.controlsLabel = Button.Button(["A and D keys to move left or right", "W and S keys to control strength"], 0, 100, 200, 200, isVisible=False, fontSize=12, boxVisible=False)
@@ -58,10 +67,14 @@ class Gui:
         this.startButton.addEventListener(this)
         this.buttons.append(this.startButton)
 
+        # Clanker is thinking...
+        this.clankaThinkingLabel = Button.Button(["The clanka is thinking..."], 300, 650, 200, 100, isVisible=False, fontSize=12, boxVisible=False)
+        this.buttons.append(this.clankaThinkingLabel)
+
         #Score:
-        this.scoreButton = Button.Button([], 200, 400, 400, 200, fontSize=25, isVisible=False)
-        this.scoreButton.addEventListener(this)
-        this.buttons.append(this.scoreButton)
+        this.continueButton = Button.Button([], 200, 400, 400, 200, fontSize=25, isVisible=False)
+        this.continueButton.addEventListener(this)
+        this.buttons.append(this.continueButton)
 
     async def gameLoop(this):
 
@@ -78,12 +91,11 @@ class Gui:
             mousePressed = pygame.mouse.get_pressed()
 
             Button.checkClicked(mousePressed[0])
-            this.gameManager.gameTick(pygame.key.get_pressed(), this.drawSurface)
+            this.gameManager.gameTick(pygame.key.get_pressed(), pygame.mouse.get_pos())
 
             for event in pygame.event.get(): # When the window closes, the program is not running
                 if event.type == pygame.QUIT:
                     running = False
-
             
             for button in this.buttons:
                 if button.isVisible:
@@ -98,56 +110,75 @@ class Gui:
     def eventFrom(this, trigger):
         
         if (trigger == this.welcomeButton):
-            
 
-            this.gameManager.gameMode = GameManager.PRE_DELIVERY
-            this.gameManager.plane.generateStones()
+            this.playFirstButton.isVisible = True
+            this.playSecondButton.isVisible = True
+            
+            #this.gameManager.plane.generateStones()
             this.welcomeLabel.isVisible = False
             this.welcomeButton.isVisible = False
             this.explainLabel.isVisible = False
+            """
             this.startButton.isVisible = True
-            this.controlsLabel.isVisible = True
-            
+            this.controlsLabel.isVisible = True"""
+        
+        if (trigger == this.playFirstButton): 
+            this.gameManager.gameMode = GameManager.CLANKA_SWEEPING 
+            this.playFirstButton.isVisible = False
+            this.playSecondButton.isVisible = False
+        
+        if (trigger == this.playSecondButton):
+            this.gameManager.gameMode = GameManager.PLAYER_SWEEPING
+            this.playFirstButton.isVisible = False
+            this.playSecondButton.isVisible = False
 
         if (trigger == this.startButton):
-            this.gameManager.plane.startPhysics() 
-            this.gameManager.gameMode = GameManager.SWEEPING
+            this.gameManager.plane.startPhysics()
+            this.gameManager.gameMode = GameManager.PLAYER_SWEEPING
 
             this.controlsLabel.isVisible = False
             this.startButton.isVisible = False
         
         if (trigger == "Win"):
+            pass
+            """this.continueButton.text = ["Red points this end: " + str(this.gameManager.plane.player.score), "Click to let the clanka play."]
+            this.continueButton.textColor = BLACK
+            this.continueButton.isVisible = True"""
             
-            this.scoreButton.text = ["You win! ", "Score: " + str(this.gameManager.plane.player.score), "Click to play again."]
-            this.scoreButton.textColor = GREEN
-            this.scoreButton.isVisible = True
             
 
         if (trigger == "Lose"):
+            pass
+            """this.continueButton.text = ["Yellow points this end:" + str(this.gameManager.plane.player.score), "Click to let the clanka play."]
+            this.continueButton.textColor = BLACK
+            this.continueButton.isVisible = True"""
             
-            this.scoreButton.text = ["You lose!", "Click to play again"]
-            this.scoreButton.textColor = RED
-            this.scoreButton.isVisible = True
-            #this.plane.addStone(30, 150, 430, 2, 0, RED)
-    
-            #this.plane.addStone(30, 250, 400, 0, 0, YELLOW)
-            #this.plane.addStone(30, 250, 460, 0, 0, YELLOW)
+        """if (trigger == this.continueButton):
             
+            this.gameManager.plane.clankaStone = Stone.Stone(Constants.STONE_RADIUS, 400, 700, 0, 0, YELLOW, this.gameManager.plane, True)
+            this.gameManager.plane.stones.append(this.gameManager.plane.clankaStone)
 
-            #this.plane.addStone(30, 400, 375, 0, 0, YELLOW)
-            #this.plane.addStone(30, 400, 490, 0, 0, YELLOW)
-
-        if (trigger == this.scoreButton):
-            
-            this.gameManager.reset()
-
-            this.scoreButton.isVisible = False
+            this.continueButton.isVisible = False
             this.explainLabel.isVisible = False
             this.startButton.isVisible = True
             this.controlsLabel.isVisible = True
+            """
 
+        if (trigger == "clankaThinking"):
+            this.clankaThinkingLabel.isVisible = True
+            this.clankaThinkingLabel.draw(this.drawSurface)
+            print("clanka think")
+        if (trigger == "clankaStopThinking"):
+            this.clankaThinkingLabel.isVisible = False
+            this.clankaThinkingLabel.draw(this.drawSurface)
+            print("clanka no think")
+        if (trigger == "playerTurn"):
+
+            this.controlsLabel.isVisible = True
+            this.startButton.isVisible = True
             
-
+        this.WINDOW.blit(this.drawSurface, (0, 0))
+        pygame.display.flip()
 
 
             

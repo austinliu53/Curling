@@ -1,8 +1,9 @@
 import Gui
 import Plane
-import pygame
 import Constants
 
+import pygame
+import math
 # This class handles the game-level stuff like game status, pages, and inputs.
 # For graphics, drawing, buttons and labels, go to Gui.
 # For physics and real-time, go to Plane.
@@ -10,79 +11,189 @@ import Constants
 
 
 MENU = 10
-PRE_DELIVERY = 20
+PLAYER_DELIVERY = 20
 #DELIVERY = 30
-SWEEPING = 40
+PLAYER_SWEEPING = 40
 SCORE = 50
+
+CLANKA_DELIVERY = 60
+CLANKA_SWEEPING = 70
+BLACK = (0, 0, 0)
 
 class GameManager:
     def __init__(this, gui : Gui):
         this.plane = Plane.Plane(Constants.PLANE_X, Constants.PLANE_Y, Constants.PLANE_WIDTH, Constants.PLANE_LENGTH)
         this.gui = gui
         this.gameMode = MENU 
-        
 
-    def gameTick(this, keysPressed, drawSurface):
+        this.playerScore = 0
+        this.clankaScore = 0
+
+        this.playerStonesLeft = Constants.STARTING_STONES
+        this.clankaStonesLeft = Constants.STARTING_STONES
+
+    def refreshScreen(this):
+        this.plane.draw(this.gui.drawSurface)
+
+        font = pygame.font.SysFont("Helvetica", 14)
+
+        fontSurface = font.render("Player Score: " + str(math.floor(this.playerScore)), True, BLACK)
+        this.gui.drawSurface.blit(fontSurface, (0, 50))
+
+        fontSurface = font.render("Clanka Score: " + str(math.floor(this.clankaScore)), True, BLACK)
+        this.gui.drawSurface.blit(fontSurface, (0, 80))
+
+        for stone in this.plane.stones:
+            stone.draw(this.gui.drawSurface)
+
+        for vector in this.plane.vectors:
+            vector.draw(this.gui.drawSurface)
+
+        this.gui.WINDOW.blit(this.gui.drawSurface, (0, 0))
+        pygame.display.flip()
+
+    def endSequence(this):
+        for stone in this.plane.stones:
+
+            stone.lastCollision = None # Reset "last collisions"
+
+            if (stone.y) <= Constants.CIRCLE_CENTER[1] - Constants.BLUE_CIRCLE_RADIUS: # 
+                this.plane.stones.remove(stone)
+                this.plane.vectors.remove(stone.vector)
+
+        this.plane.calcScore(this.plane.stones)
+        
+        if this.plane.player.score > 0:
+            this.playerScore = this.plane.player.score
+            this.clankaScore = 0
+        else:
+            this.playerScore = 0
+            this.clankaScore = -this.plane.player.score
+
+        if (this.gameMode == CLANKA_SWEEPING):
+            this.gui.eventFrom("playerTurn")
+            this.gameMode = PLAYER_DELIVERY
+            this.plane.addPlayerStone()
+            this.playerStonesLeft -= 1
+        
+        if (this.gameMode == PLAYER_SWEEPING):
+            this.gameMode = CLANKA_DELIVERY
+
+            this.gui.eventFrom("clankaThinking")
+            this.plane.addclankaStone()
+            this.refreshScreen()
+            this.playerStonesLeft -= 1
+            this.gui.eventFrom("clankaStopThinking")
+
+    def gameTick(this, keysPressed, mousePos):
 
         if (this.gameMode == MENU):
             pass
 
-        elif (this.gameMode == PRE_DELIVERY) or (this.gameMode == SWEEPING):
+        elif (this.gameMode == PLAYER_DELIVERY) or (this.gameMode == PLAYER_SWEEPING) or (this.gameMode == CLANKA_DELIVERY) or (this.gameMode == CLANKA_SWEEPING):
             
             # Draw the plane first.
             # Then the stones,
             # Then the vectors
-            this.plane.draw(drawSurface)
+            this.plane.draw(this.gui.drawSurface)
 
-            if (this.gameMode == PRE_DELIVERY): 
+            # Calculate the score always
+            this.plane.player.score = this.plane.calcScore(this.plane.stones)
 
+            if this.plane.player.score > 0:
+                this.playerScore = this.plane.player.score
+                this.clankaScore = 0
+            else:
+                this.playerScore = 0
+                this.clankaScore = -this.plane.player.score
+
+            font = pygame.font.SysFont("Helvetica", 14)
+            fontSurface = font.render("Player Score: " + str(math.floor(this.playerScore)), True, BLACK)
+            this.gui.drawSurface.blit(fontSurface, (0, 50))
+
+            fontSurface = font.render("Clanka Score: " + str(math.floor(this.clankaScore)), True, BLACK)
+            this.gui.drawSurface.blit(fontSurface, (0, 80))
+
+            for stone in this.plane.stones:
+                stone.draw(this.gui.drawSurface)
+
+            for vector in this.plane.vectors:
+                vector.draw(this.gui.drawSurface)
+
+            if (this.gameMode == PLAYER_DELIVERY): 
+                
                 this.plane.player.input(keysPressed[pygame.K_a], keysPressed[pygame.K_d], keysPressed[pygame.K_w], keysPressed[pygame.K_s])
-                this.plane.player.vector.draw(drawSurface)
+                this.plane.player.vector.draw(this.gui.drawSurface)
                 this.plane.player.updatePathTracer()
                 this.plane.player.aimAssist.draw(this.gui.drawSurface)
+
+                """if (keysPressed[pygame.K_p]): # If key p pressed, find optimal position.
+
+                    pos = this.plane.findOptimal()
+                    this.plane.player.iVel = pos[0]
+                    this.plane.playerStone.x = pos[1]"""
                 
-                for stone in this.plane.predictPosition(this.plane.playerStone, [0, this.plane.player.iVel]):
-                    stone.draw(this.gui.drawSurface)
+                predictedPosition = this.plane.predictPosition(this.plane.playerStone, [0, this.plane.player.iVel])
                 
+                
+                """for stone in predictedPosition:
+                    stone.draw(this.gui.drawSurface)"""
+                
+
+                font = pygame.font.SysFont("Helvetica", 14)
+                fontSurface = font.render(str(math.floor(this.plane.positionPoints(predictedPosition))), True, BLACK)
+                this.gui.drawSurface.blit(fontSurface, (0, 0))
                 
                 #print("ghostStones", len(this.plane.ghostStones))
                 #print("stones", len(this.plane.stones))
             
             this.plane.tick(this.gameMode)
-            
-            if (this.gameMode == SWEEPING):
-                if not this.plane.stoneActive:
 
-                    this.plane.calcScore()
+            if (this.gameMode == PLAYER_SWEEPING):
+                if not this.plane.stoneActive: # When all stones have settled down
 
+                    this.endSequence()
+                    return
 
-                    if this.plane.player.score > 0:
-                        this.gui.eventFrom("Win")
-                    else:
-                        this.gui.eventFrom("Lose")
+            # Print the player's score and the clanka's score
 
-                    this.gameMode = SCORE
+            if (this.gameMode == CLANKA_DELIVERY):
+                
+                this.gameMode = CLANKA_SWEEPING
+                this.plane.stoneActive = True
 
-
-            for stone in this.plane.stones:
-                stone.draw(drawSurface)
-
-            for vector in this.plane.vectors:
-                vector.draw(drawSurface)
+            if (this.gameMode == CLANKA_SWEEPING):
+                if not this.plane.stoneActive: # When all stones have settled down
+                    this.endSequence()
+                    return
 
             
+
+            
+
+
+
 
         elif (this.gameMode == SCORE):
             
-            this.plane.draw(drawSurface)
+            this.plane.draw(this.gui.drawSurface)
 
             for stone in this.plane.stones:
-                stone.draw(drawSurface)
+                stone.draw(this.gui.drawSurface)
+
+        font = pygame.font.SysFont("Helvetica", 14)
+
+        fontSurface = font.render("Mouse: " + str(mousePos), True, BLACK)
+        this.gui.drawSurface.blit(fontSurface, (600, 0))
+
+        #print(this.gameMode)
 
     def reset(this):
-        this.gameMode = PRE_DELIVERY
+        this.gameMode = PLAYER_DELIVERY
         this.plane.reset()
         this.plane.generateStones()
+
+        
         
             
             

@@ -2,6 +2,7 @@
 import Constants
 import Vector
 import Plane
+import random
 
 import pygame
 import math
@@ -39,6 +40,47 @@ class Stone:
             (this.y < Constants.PLANE_Y) or
             (this.y > Constants.PLANE_Y + Constants.PLANE_LENGTH)
         )
+
+    def stoneEffectiveness(this):
+
+        # Find the distance of the stone. The y-level
+        if (this.y < Constants.CIRCLE_CENTER[1]) and (this.distanceToMiddle > Constants.BLUE_CIRCLE_RADIUS + this.radius):
+            return 0
+        
+        backLineY = Constants.CIRCLE_CENTER[1] - Constants.BLUE_CIRCLE_RADIUS
+        yToMiddle = abs(this.y - backLineY) 
+
+        # Find the distance to the middle
+        xToMiddle = abs(this.x - Constants.CIRCLE_CENTER[0])
+
+        # Find the distance to the middle 
+        # It already has a variable :)
+        distancePoints = max(0, Constants.BLUE_CIRCLE_RADIUS - this.distanceToMiddle)
+
+        # Find the possibility of it getting hit onto the house
+
+        if (
+            (this.x >= Constants.CIRCLE_CENTER[0] - Constants.BLUE_CIRCLE_RADIUS) and
+            (this.x <= Constants.CIRCLE_CENTER[0] + Constants.BLUE_CIRCLE_RADIUS) and
+            (this.y >= Constants.CIRCLE_CENTER[1] + Constants.BLUE_CIRCLE_RADIUS) and 
+            (this.y <= 400)
+            ):
+            rebound = 100
+        else:
+            rebound = 0
+        
+        effectiveness = (
+            max(0, Constants.PLANE_WIDTH / 2 - xToMiddle) * 0.2 + 
+            max(0, Constants.PLANE_LENGTH - yToMiddle) * 0.03 + 
+            rebound +
+            distancePoints
+            
+            )
+            
+        return effectiveness
+                                                                                                                                                                                                    
+
+        # Find the 
 
 
     def findNewVelocities(this, stone): # -> Returns List: This vector, stone vector        
@@ -87,6 +129,27 @@ class Stone:
                 -stoneNewVelocity * (math.sin(collisionAngle)) + tempStoneY
             ]
         ]
+    
+    def willThisShadow(this, x, y, radius) -> bool: # If this stone is in the effective shadow of stone.
+        dX = this.x - x
+        dY = this.y - y
+
+        #print(dY, dX)
+
+        distance = math.sqrt(dX ** 2 + dY ** 2)
+
+        minRadius = this.radius + radius
+
+        
+        if (distance <= minRadius):
+            return True
+        
+        if (abs(dX) <= minRadius and this.y > y) and this.stoneEffectiveness() > 25:
+
+            if random.randint(0, int(abs(dY))) <= 50:
+                return True
+        
+        return False
     
     def isColliding(this, stone) -> bool: 
         if (stone == this):
@@ -143,19 +206,18 @@ class Stone:
                 this.lastCollision = stone
                 stone.lastCollision = this
 
-
     def draw(this, drawSurface):
 
         if (this.isRealStone):
             pygame.draw.circle(drawSurface, GREY, (this.x, this.y), this.radius)
             pygame.draw.circle(drawSurface, this.color, (this.x, this.y), this.radius - 2)
 
-            font = pygame.font.SysFont("Helvetica", 10)
-            fontSurface = font.render(str(math.floor(this.distanceToMiddle)), True, BLACK)
-            drawSurface.blit(fontSurface, (this.x - this.radius/2, this.y - this.radius/2))
 
         else:
             pygame.draw.circle(drawSurface, this.color, (this.x, this.y), this.radius, 2)
+            font = pygame.font.SysFont("Helvetica", 10)
+            fontSurface = font.render(str(math.floor(this.stoneEffectiveness())), True, BLACK)
+            drawSurface.blit(fontSurface, (this.x - this.radius/2, this.y - this.radius/2))
         #pygame.draw.aaline(drawSurface, BLACK, (this.x, this.y), (this.x + this.xVel * 4, this.y + this.yVel * 4))
     
     def ghostCopy(this):
