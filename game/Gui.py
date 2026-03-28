@@ -55,13 +55,22 @@ class Gui:
         this.selectOrderLabel.addEventListener(this)
         this.buttons.append(this.selectOrderLabel)
 
-        this.playFirstButton = Button.Button(["Play first", "(This is harder)"], 200, 400, 400, 100, fontSize=18, isVisible=False, fillColor=LIGHTER_BLUE)
+        this.playFirstButton = Button.Button(["Play first", "(This is harder)"], 200, 400, 200, 100, fontSize=18, isVisible=False, fillColor=LIGHTER_BLUE)
         this.playFirstButton.addEventListener(this)
         this.buttons.append(this.playFirstButton)
 
-        this.playSecondButton = Button.Button(["Play second", "(This is easier)"], 200, 500, 400, 100, fontSize=18, isVisible=False, fillColor=LIGHTER_BLUE)
+        this.playSecondButton = Button.Button(["Play second", "(This is easier)"], 400, 400, 200, 100, fontSize=18, isVisible=False, fillColor=LIGHTER_BLUE)
         this.playSecondButton.addEventListener(this)
         this.buttons.append(this.playSecondButton)
+
+        this.diffEasyButton = Button.Button("Easy", 400, 500, 50, 50, isVisible=False, fillColor=LIGHTER_BLUE)
+        this.diffEasyButton
+        this.diffMediumButton = Button.Button("Medium", 450, 500, 50, 50, isVisible=False, fillColor=LIGHTER_BLUE)
+        this.diffMediumButton
+        this.diffEasyButton = Button.Button("Hard", 500, 500, 50, 50, isVisible=False, fillColor=LIGHTER_BLUE)
+        this.diffEasyButton
+        this.diffEasyButton = Button.Button("Evil", 550, 500, 50, 50, isVisible=False, fillColor=LIGHTER_BLUE)
+
         
         # Started curling 
 

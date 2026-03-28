@@ -59,6 +59,7 @@ class GameManager:
         pygame.display.flip()
 
     def endSequence(this):
+        print("End sequence")
 
         this.plane.player.score = this.plane.calcScore(this.plane.stones)
         
@@ -172,8 +173,8 @@ class GameManager:
                 predictedPosition = this.plane.predictPosition(this.plane.playerStone, [0, this.plane.player.iVel])
                 
                 
-                """for stone in predictedPosition:
-                    stone.draw(this.gui.drawSurface)"""
+                for stone in predictedPosition:
+                    stone.draw(this.gui.drawSurface)
                 
 
                 font = pygame.font.SysFont("Helvetica", 14)
@@ -187,7 +188,6 @@ class GameManager:
 
             if (this.gameMode == PLAYER_SWEEPING):
                 if not this.plane.stoneActive: # When all stones have settled down
-
                     this.endSequence()
                     return
 
