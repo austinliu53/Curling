@@ -8,6 +8,8 @@ import asyncio
 
 WHITE = (255, 255, 255)
 GREY = (127, 127, 127)
+LIGHT_BLUE = (100, 127, 255)
+LIGHTER_BLUE = (127, 157, 255)
 BLACK = (0, 0, 0)
 RED = (255, 0, 0)
 YELLOW = (255, 255, 0)
@@ -33,46 +35,49 @@ class Gui:
 
         this.buttons = []
 
-        #Welcome
-        this.welcomeLabel = Button.Button("Curling Arcade!", 200, 50, 400, 100, isVisible=True, fontSize=20, boxVisible=False)
+        # Welcome to the game!
+        this.welcomeLabel = Button.Button("Curling Arcade!", 200, 50, 400, 100, isVisible=True, fontSize=20, boxVisible=False, fillColor=LIGHTER_BLUE)
         this.buttons.append(this.welcomeLabel)
 
         this.explainLabel = Button.Button(
             "Slide your stones, bump the opponent's stones out of the ring, and win points!",
-            200, 200, 400, 100, isVisible=True, boxVisible=False)
+            200, 200, 400, 100, isVisible=True, boxVisible=False, fillColor=LIGHTER_BLUE)
         this.explainLabel.addEventListener(this)
         this.buttons.append(this.explainLabel)
                                           
-        this.welcomeButton = Button.Button("Play against clanka", 200, 300, 400, 100, 18, isVisible=True)
+        this.welcomeButton = Button.Button("Play against clanka", 200, 300, 400, 100, fontSize=18, isVisible=True, fillColor=LIGHTER_BLUE)
         this.welcomeButton.addEventListener(this)
         this.buttons.append(this.welcomeButton)
         
         # So, play first or play second ????
-        this.playFirstButton = Button.Button(["Play first", "(This is harder)"], 200, 400, 400, 100, 18, isVisible=False)
+
+        this.selectOrderLabel = Button.Button("Select your order.", 200, 300, 400, 100, fontSize=36, isVisible=False, boxVisible=False)
+        this.selectOrderLabel.addEventListener(this)
+        this.buttons.append(this.selectOrderLabel)
+
+        this.playFirstButton = Button.Button(["Play first", "(This is harder)"], 200, 400, 400, 100, fontSize=18, isVisible=False, fillColor=LIGHTER_BLUE)
         this.playFirstButton.addEventListener(this)
         this.buttons.append(this.playFirstButton)
 
-        this.playSecondButton = Button.Button(["Play second", "(This is easier)"], 200, 500, 400, 100, 18, isVisible=False)
+        this.playSecondButton = Button.Button(["Play second", "(This is easier)"], 200, 500, 400, 100, fontSize=18, isVisible=False, fillColor=LIGHTER_BLUE)
         this.playSecondButton.addEventListener(this)
         this.buttons.append(this.playSecondButton)
-
-        # Curling works:   
         
-        #Start curling 
+        # Started curling 
 
-        this.controlsLabel = Button.Button(["A and D keys to move left or right", "W and S keys to control strength"], 0, 100, 200, 200, isVisible=False, fontSize=12, boxVisible=False)
+        this.controlsLabel = Button.Button(["A and D keys to move left or right", "W and S keys to control strength"], 0, 100, 200, 200, isVisible=False, fontSize=12, boxVisible=False, fillColor=LIGHTER_BLUE)
         this.buttons.append(this.controlsLabel)
 
-        this.startButton = Button.Button("Press to launch", 0, 300, 200, 200, fontSize=12, isVisible=False)
+        this.startButton = Button.Button("Press to launch", 0, 300, 200, 200, fontSize=12, isVisible=False, fillColor=LIGHTER_BLUE)
         this.startButton.addEventListener(this)
         this.buttons.append(this.startButton)
 
         # Clanker is thinking...
-        this.clankaThinkingLabel = Button.Button(["The clanka is thinking..."], 300, 650, 200, 100, isVisible=False, fontSize=12, boxVisible=False)
+        this.clankaThinkingLabel = Button.Button(["The clanka is thinking..."], 300, 650, 200, 100, isVisible=False, fontSize=12, boxVisible=False, fillColor=LIGHTER_BLUE)
         this.buttons.append(this.clankaThinkingLabel)
 
         #Score:
-        this.continueButton = Button.Button([], 200, 400, 400, 200, fontSize=25, isVisible=False)
+        this.continueButton = Button.Button([], 200, 400, 400, 200, fontSize=25, isVisible=False, fillColor=LIGHTER_BLUE)
         this.continueButton.addEventListener(this)
         this.buttons.append(this.continueButton)
 
@@ -84,7 +89,7 @@ class Gui:
         while running: 
 
 
-            this.drawSurface.fill(GREY)
+            this.drawSurface.fill(LIGHT_BLUE)
             this.clock.tick(Constants.FPS)
 
             mousePos = pygame.mouse.get_pos()
@@ -111,6 +116,7 @@ class Gui:
         
         if (trigger == this.welcomeButton):
 
+            this.selectOrderLabel.isVisible = True
             this.playFirstButton.isVisible = True
             this.playSecondButton.isVisible = True
             
@@ -124,11 +130,13 @@ class Gui:
         
         if (trigger == this.playFirstButton): 
             this.gameManager.gameMode = GameManager.CLANKA_SWEEPING 
+            this.selectOrderLabel.isVisible = False
             this.playFirstButton.isVisible = False
             this.playSecondButton.isVisible = False
         
         if (trigger == this.playSecondButton):
             this.gameManager.gameMode = GameManager.PLAYER_SWEEPING
+            this.selectOrderLabel.isVisible = False
             this.playFirstButton.isVisible = False
             this.playSecondButton.isVisible = False
 
@@ -140,29 +148,30 @@ class Gui:
             this.startButton.isVisible = False
         
         if (trigger == "Win"):
-            pass
-            """this.continueButton.text = ["Red points this end: " + str(this.gameManager.plane.player.score), "Click to let the clanka play."]
+            this.continueButton.text = ["Red points this end: " + str(this.gameManager.plane.player.score), "You win!", "Click to go to main screen."]
             this.continueButton.textColor = BLACK
-            this.continueButton.isVisible = True"""
+            this.continueButton.isVisible = True
             
-            
-
         if (trigger == "Lose"):
-            pass
-            """this.continueButton.text = ["Yellow points this end:" + str(this.gameManager.plane.player.score), "Click to let the clanka play."]
+
+            this.continueButton.text = ["Yellow points this end:" + str(-this.gameManager.plane.player.score), "You lose!", "Click to go to main screen."]
             this.continueButton.textColor = BLACK
-            this.continueButton.isVisible = True"""
+            this.continueButton.isVisible = True
             
-        """if (trigger == this.continueButton):
+        if (trigger == this.continueButton):
             
-            this.gameManager.plane.clankaStone = Stone.Stone(Constants.STONE_RADIUS, 400, 700, 0, 0, YELLOW, this.gameManager.plane, True)
-            this.gameManager.plane.stones.append(this.gameManager.plane.clankaStone)
+            this.gameManager.reset()
+            this.gameManager.gameMode = GameManager.MENU
+
+            this.welcomeLabel.isVisible = True
+            this.explainLabel.isVisible = True
+            this.welcomeButton.isVisible = True
 
             this.continueButton.isVisible = False
-            this.explainLabel.isVisible = False
-            this.startButton.isVisible = True
-            this.controlsLabel.isVisible = True
-            """
+            
+            this.startButton.isVisible = False
+            this.controlsLabel.isVisible = False
+
 
         if (trigger == "clankaThinking"):
             this.clankaThinkingLabel.isVisible = True

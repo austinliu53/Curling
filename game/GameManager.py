@@ -43,25 +43,24 @@ class GameManager:
         fontSurface = font.render("Clanka Score: " + str(math.floor(this.clankaScore)), True, BLACK)
         this.gui.drawSurface.blit(fontSurface, (0, 80))
 
+        fontSurface = font.render("Player stones left: " + str(this.playerStonesLeft), True, BLACK)
+        this.gui.drawSurface.blit(fontSurface, (0, 110))
+
+        fontSurface = font.render("Clanka stones left: " + str(this.clankaStonesLeft), True, BLACK)
+        this.gui.drawSurface.blit(fontSurface, (0, 140))
+
         for stone in this.plane.stones:
             stone.draw(this.gui.drawSurface)
 
-        for vector in this.plane.vectors:
-            vector.draw(this.gui.drawSurface)
+        """for vector in this.plane.vectors:
+            vector.draw(this.gui.drawSurface)"""
 
         this.gui.WINDOW.blit(this.gui.drawSurface, (0, 0))
         pygame.display.flip()
 
     def endSequence(this):
-        for stone in this.plane.stones:
 
-            stone.lastCollision = None # Reset "last collisions"
-
-            if (stone.y) <= Constants.CIRCLE_CENTER[1] - Constants.BLUE_CIRCLE_RADIUS: # 
-                this.plane.stones.remove(stone)
-                this.plane.vectors.remove(stone.vector)
-
-        this.plane.calcScore(this.plane.stones)
+        this.plane.player.score = this.plane.calcScore(this.plane.stones)
         
         if this.plane.player.score > 0:
             this.playerScore = this.plane.player.score
@@ -70,20 +69,51 @@ class GameManager:
             this.playerScore = 0
             this.clankaScore = -this.plane.player.score
 
+        if (this.clankaStonesLeft == 0) and (this.playerStonesLeft == 0):
+            if (this.playerScore == 0):
+                this.gui.eventFrom("Lose")
+            else:
+                this.gui.eventFrom("Win")
+
+            this.gameMode = SCORE
+            return
+
+        for stone in this.plane.stones:
+
+            stone.lastCollision = None # Reset "last collisions"
+
+            if (stone.y) <= Constants.CIRCLE_CENTER[1] - Constants.BLUE_CIRCLE_RADIUS: # 
+                this.plane.stones.remove(stone)
+                this.plane.vectors.remove(stone.vector)
+
         if (this.gameMode == CLANKA_SWEEPING):
-            this.gui.eventFrom("playerTurn")
-            this.gameMode = PLAYER_DELIVERY
-            this.plane.addPlayerStone()
-            this.playerStonesLeft -= 1
+            if (this.clankaStonesLeft % 2 == 1): # If there's an odd number of stones, then it still hasn't thrown the other one.
+                this.gameMode = CLANKA_DELIVERY
+                this.gui.eventFrom("clankaThinking")
+                this.refreshScreen()
+                this.plane.addclankaStone()
+                this.clankaStonesLeft -= 1
+                this.gui.eventFrom("clankaStopThinking")
+            else:
+                this.gameMode = PLAYER_DELIVERY
+                this.gui.eventFrom("playerTurn")
+                this.plane.addPlayerStone()
+                this.playerStonesLeft -= 1
         
         if (this.gameMode == PLAYER_SWEEPING):
-            this.gameMode = CLANKA_DELIVERY
 
-            this.gui.eventFrom("clankaThinking")
-            this.plane.addclankaStone()
-            this.refreshScreen()
-            this.playerStonesLeft -= 1
-            this.gui.eventFrom("clankaStopThinking")
+            if (this.playerStonesLeft % 2 == 1):
+                this.gameMode = PLAYER_DELIVERY
+                this.gui.eventFrom("playerTurn")
+                this.plane.addPlayerStone()
+                this.playerStonesLeft -= 1
+            else:
+                this.gameMode = CLANKA_DELIVERY
+                this.gui.eventFrom("clankaThinking")
+                this.refreshScreen()
+                this.plane.addclankaStone()
+                this.clankaStonesLeft -= 1
+                this.gui.eventFrom("clankaStopThinking")
 
     def gameTick(this, keysPressed, mousePos):
 
@@ -114,11 +144,17 @@ class GameManager:
             fontSurface = font.render("Clanka Score: " + str(math.floor(this.clankaScore)), True, BLACK)
             this.gui.drawSurface.blit(fontSurface, (0, 80))
 
+            fontSurface = font.render("Player stones left: " + str(this.playerStonesLeft), True, BLACK)
+            this.gui.drawSurface.blit(fontSurface, (0, 110))
+
+            fontSurface = font.render("Clanka stones left: " + str(this.clankaStonesLeft), True, BLACK)
+            this.gui.drawSurface.blit(fontSurface, (0, 140))
+
             for stone in this.plane.stones:
                 stone.draw(this.gui.drawSurface)
 
-            for vector in this.plane.vectors:
-                vector.draw(this.gui.drawSurface)
+            """for vector in this.plane.vectors:
+                vector.draw(this.gui.drawSurface)"""
 
             if (this.gameMode == PLAYER_DELIVERY): 
                 
@@ -167,13 +203,6 @@ class GameManager:
                     this.endSequence()
                     return
 
-            
-
-            
-
-
-
-
         elif (this.gameMode == SCORE):
             
             this.plane.draw(this.gui.drawSurface)
@@ -189,9 +218,12 @@ class GameManager:
         #print(this.gameMode)
 
     def reset(this):
-        this.gameMode = PLAYER_DELIVERY
+        this.clankaStonesLeft = Constants.STARTING_STONES
+        this.playerStonesLeft = Constants.STARTING_STONES
+        this.playerScore = 0
+        this.clankaScore = 0
         this.plane.reset()
-        this.plane.generateStones()
+
 
         
         

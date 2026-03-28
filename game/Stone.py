@@ -147,7 +147,8 @@ class Stone:
         if (abs(dX) <= minRadius and this.y > y) and this.stoneEffectiveness() > 25:
 
             if random.randint(0, int(abs(dY))) <= 50:
-                return True
+                if random.randint(0, len(this.plane.stones)) <= 2:
+                    return True
         
         return False
     

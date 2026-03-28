@@ -41,7 +41,7 @@ class Plane:
         this.vectors.remove(this.player.vector)
 
     def draw(this, drawSurface):
-        pygame.draw.rect(drawSurface, GREY, (this.x, this.y, this.width, this.length))
+        pygame.draw.rect(drawSurface, WHITE, (this.x, this.y, this.width, this.length))
 
         pygame.draw.circle(drawSurface, BLUE, Constants.CIRCLE_CENTER, Constants.BLUE_CIRCLE_RADIUS)
         pygame.draw.circle(drawSurface, WHITE, Constants.CIRCLE_CENTER, Constants.WHITE_CIRCLE_RADIUS)
@@ -113,13 +113,13 @@ class Plane:
         this.ghostStones = []
         this.vectors = []
         this.stoneActive = False
-
+        """
         # Initializing the stones 
         this.playerStone = Stone.Stone(Constants.STONE_RADIUS, 400, 700, 0, 0, RED, this, True)
         this.stones.append(this.playerStone)
 
         # Initializing player
-        this.player = Player.Player(this.playerStone)
+        this.player = Player.Player(this.playerStone)"""
 
     def sortStonesDistance(this, stones):
 
