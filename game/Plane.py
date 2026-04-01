@@ -81,13 +81,13 @@ class Plane:
             
             this.stones.append(Stone.Stone(Constants.STONE_RADIUS, x, y, 0, 0, stoneColor, this, True))
         
-    def addclankaStone(this):
+    def addclankaStone(this, difficulty):
 
         this.clankaStone = Stone.Stone(Constants.STONE_RADIUS, 400, 700, 0, 0, YELLOW, this, True)
 
         this.stones.append(this.clankaStone)
 
-        pos = this.findOptimal()
+        pos = this.findOptimal(difficulty)
 
         this.clankaStone.yVel = pos[0]
         this.clankaStone.x = pos[1]
@@ -300,11 +300,33 @@ class Plane:
 
         return [[minX, maxX], [minY, maxY]]
     
-    def findOptimal(this): # This algorithm gets the scoring of all potential positions, and finds which one helps the bot's position the most.
+    def findOptimal(this, difficulty): # This algorithm gets the scoring of all potential positions, and finds which one helps the bot's position the most.
 
         # Firstly, we will do coarse calculations for every shot that is not going to collide. 
         # Next, there will be 100% percent accuracy calculations for shots that will collide.
         
+        if (difficulty == GameManager.EASY):
+            
+            if (len(this.stones) >= 1):
+                randomX = random.randint(Constants.CIRCLE_CENTER[0] - Constants.BLUE_CIRCLE_RADIUS, Constants.CIRCLE_CENTER[0] + Constants.BLUE_CIRCLE_RADIUS)
+
+                randomIVel = (this.clankaStone.y - random.randint(
+                        Constants.CIRCLE_CENTER[1] - Constants.BLUE_CIRCLE_RADIUS, Constants.CIRCLE_CENTER[1] + Constants.BLUE_CIRCLE_RADIUS
+                        )
+                    ) * Constants.FRICTION
+
+                return (-randomIVel, randomX)
+            else:
+                extremes = this.findStoneExtremes(this.stones, this.clankaStone)
+
+            xChoice = random.randint(int(extremes[0][0]), int(extremes[0][1])) + random.randint(-50, 50)
+            xChoice = max(Constants.PLANE_X, min(Constants.PLANE_X + Constants.PLANE_WIDTH, xChoice))
+
+            iVelChoice = int((this.clankaStone.y - random.randint(int(extremes[1][0]), int(extremes[1][1]))) / Constants.FRICTION) # A random launch between the minimum and the maximum distance stone already shot.
+            
+            return (iVelChoice, xChoice)
+        
+
         optimalPoints = -math.inf
         optimalShot = (0, Constants.PLANE_X)
 
@@ -313,6 +335,11 @@ class Plane:
 
         passes = 0
         positionsCalculated = 0
+
+        if (difficulty == GameManager.MEDIUM):
+            xPrecision = 10 * Constants.X_MOVE_ACCEL
+        else:
+            xPrecision = 5 * Constants.X_MOVE_ACCEL
 
         while iVel <= Constants.PLAYER_MAX_VEL:
             
@@ -333,11 +360,14 @@ class Plane:
                     optimalPoints = points
                     optimalShot = (iVel, launchX)
 
-                launchX += 10 * Constants.X_MOVE_ACCEL
+                launchX += xPrecision
 
                 this.clankaStone.x = launchX
 
-            iVel += Constants.DELIVERY_ACCEL * 60
+            iVel += Constants.DELIVERY_ACCEL * 20
+
+        if (difficulty != GameManager.EVIL):
+            return (-optimalShot[0], optimalShot[1])
 
         # Reset the theoretical position for another finer comb
         iVel = 0
@@ -345,7 +375,8 @@ class Plane:
 
         previousStones = [stone for stone in this.stones if stone != this.clankaStone] # the current stones that exclude the clanka stone
         # print(len(previousStones))
-        # Finer comb
+        # Finer comb        
+        
         while iVel <= Constants.PLAYER_MAX_VEL:
             
             launchX = Constants.PLANE_X 
@@ -354,9 +385,9 @@ class Plane:
                 
                 passes += 1
 
-                for stone in previousStones:
+                predictY = this.clankaStone.y - (iVel / Constants.FRICTION)
 
-                    predictY = this.clankaStone.y - (iVel / Constants.FRICTION)
+                for stone in previousStones:
 
                     if stone.willThisShadow(this.clankaStone.x, predictY, Constants.STONE_RADIUS): # If it will collide
                         #print("stone pos", stone.x, stone.y, "this pos", this.clankaStone.x, predictY)
@@ -371,16 +402,18 @@ class Plane:
             
                             optimalPoints = points
                             optimalShot = (iVel, launchX)
+                        
+                        break
                     
-
                 launchX += Constants.X_MOVE_ACCEL * 1
 
                 this.clankaStone.x = launchX
 
             iVel += Constants.DELIVERY_ACCEL * 2
 
-        print("Optimal points: ", optimalPoints)
-        print("passes", passes)
+        """print("Optimal points: ", optimalPoints)
+        print("passes", passes)"""
+
         print("positionsCalculated", positionsCalculated)
         # Record: 15093 passes
 

@@ -44,6 +44,7 @@ class Button:
         this.gui = None
 
         this.isHoveredOn = False
+        this.isDisabled = False
 
     
     
@@ -65,7 +66,16 @@ class Button:
         
             
         if (this.boxVisible):
-            if (this.isHoveredOn):
+
+            if (this.isDisabled):
+                realFillColor = (
+                    
+                    this.fillColor[0] * Constants.CLICK_DIMMING, 
+                    this.fillColor[1] * Constants.CLICK_DIMMING, 
+                    this.fillColor[2] * Constants.CLICK_DIMMING,
+                ) 
+
+            elif (this.isHoveredOn):
                 if (Button.mouseDown): # Hovered on + mousedown = dim (clicked button)
                     realFillColor = (
                         
@@ -84,7 +94,10 @@ class Button:
                     )
 
             else: # Otherwise, make real fill color be the regular color
+
                 realFillColor = this.fillColor
+                
+                
 
             # Draw both rects
             pygame.draw.rect(drawSurface, this.borderColor, pygame.Rect(this.x - this.borderRadius, this.y - this.borderRadius, this.width + 2*this.borderRadius, this.height + 2*this.borderRadius), border_radius=this.borderRadius)

@@ -10,14 +10,21 @@ import math
 # For collision physics, go to Stone.
 
 
+# Gamemode
 MENU = 10
 PLAYER_DELIVERY = 20
-#DELIVERY = 30
 PLAYER_SWEEPING = 40
 SCORE = 50
-
 CLANKA_DELIVERY = 60
 CLANKA_SWEEPING = 70
+
+# Game difficulty
+EASY = 100
+MEDIUM = 200
+HARD = 300
+EVIL = 400
+
+
 BLACK = (0, 0, 0)
 
 class GameManager:
@@ -25,6 +32,9 @@ class GameManager:
         this.plane = Plane.Plane(Constants.PLANE_X, Constants.PLANE_Y, Constants.PLANE_WIDTH, Constants.PLANE_LENGTH)
         this.gui = gui
         this.gameMode = MENU 
+
+        this.playerGoesFirst = True
+        this.difficulty = EASY
 
         this.playerScore = 0
         this.clankaScore = 0
@@ -59,7 +69,7 @@ class GameManager:
         pygame.display.flip()
 
     def endSequence(this):
-        print("End sequence")
+        #print("End sequence")
 
         this.plane.player.score = this.plane.calcScore(this.plane.stones)
         
@@ -92,7 +102,7 @@ class GameManager:
                 this.gameMode = CLANKA_DELIVERY
                 this.gui.eventFrom("clankaThinking")
                 this.refreshScreen()
-                this.plane.addclankaStone()
+                this.plane.addclankaStone(this.difficulty)
                 this.clankaStonesLeft -= 1
                 this.gui.eventFrom("clankaStopThinking")
             else:
@@ -112,7 +122,7 @@ class GameManager:
                 this.gameMode = CLANKA_DELIVERY
                 this.gui.eventFrom("clankaThinking")
                 this.refreshScreen()
-                this.plane.addclankaStone()
+                this.plane.addclankaStone(this.difficulty)
                 this.clankaStonesLeft -= 1
                 this.gui.eventFrom("clankaStopThinking")
 
