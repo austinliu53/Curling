@@ -6,12 +6,15 @@ import Vector
 import AimAssist
 
 class Player:
-    def __init__(this, stone: Stone):
+    def __init__(this, color, stone: Stone):
 
         this.stone = stone
         this.iVel = Constants.INITIAL_DELIVERY
         this.iAngle = math.pi # 180 degrees : down
+        this.color = color 
         this.score = 0
+        this.stonesLeft = Constants.STARTING_STONES
+
 
         this.vector = Vector.Vector(
             this.stone.x,

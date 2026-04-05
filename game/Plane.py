@@ -24,23 +24,25 @@ class Plane:
         this.ghostStones = []
         this.vectors = []
         this.stoneActive = False
+        this.player = None
 
         # Initializing the stones 
-        this.playerStone = Stone.Stone(Constants.STONE_RADIUS, -400, 700, 0, 0, RED, this, True)
-        this.stones.append(this.playerStone)
+        this.player1Stone = Stone.Stone(Constants.STONE_RADIUS, -400, 700, 0, 0, RED, this, True)
+
+        this.stones.append(this.player1Stone)
 
         this.clankaStone = None 
 
         # Initializing player
-
-        this.player = Player.Player(this.playerStone)
     
+    def setPlayer(this, player: Player):
+        this.player = player
 
     def startPhysics(this):
         this.playerStone.setVelocity(0, this.player.iVel)
         this.vectors.remove(this.player.vector)
 
-    def draw(this, drawSurface):
+    def draw(this, drawSurface: pygame.Surface):
         pygame.draw.rect(drawSurface, WHITE, (this.x, this.y, this.width, this.length))
 
         pygame.draw.circle(drawSurface, BLUE, Constants.CIRCLE_CENTER, Constants.BLUE_CIRCLE_RADIUS)
@@ -51,7 +53,10 @@ class Plane:
     
     def generateStones(this):
         
-        this.stones = [this.playerStone]
+        try:
+            this.stones = [this.playerStone]
+        except:
+            pass
         numStones = random.randint(2, 5)
 
         for i in range(numStones):
@@ -92,11 +97,10 @@ class Plane:
         this.clankaStone.yVel = pos[0]
         this.clankaStone.x = pos[1]
         
-        
         #print(len(this.stones))
 
-    def addPlayerStone(this):
-        this.playerStone = Stone.Stone(Constants.STONE_RADIUS, 400, 700, 0, 0, RED, this, True)
+    def addPlayerStone(this, currentTurn):
+        this.playerStone = Stone.Stone(Constants.STONE_RADIUS, 400, 700, 0, 0, currentTurn.color, this, True)
         this.stones.append(this.playerStone)
         this.player.stone = this.playerStone
         this.player.vector = Vector.Vector(
@@ -106,6 +110,8 @@ class Plane:
             Constants.INITIAL_DELIVERY,
             this.playerStone
         )
+
+        currentTurn.stonesLeft -= 1
 
     def reset(this):
 
@@ -164,7 +170,7 @@ class Plane:
             return 0
         
         winningTeam = sortedStones[0].color
-        #print("Winning team:", winningTeam)
+
         winningPoints = 0
 
         for sortedStone in sortedStones:
@@ -178,8 +184,7 @@ class Plane:
             #print(sortedStone.color)
 
             winningPoints += 1
-        
-        #print("winningPoints", winningPoints)
+    
 
         if (winningTeam == YELLOW):
             winningPoints *= -1

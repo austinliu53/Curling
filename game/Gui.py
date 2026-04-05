@@ -73,20 +73,20 @@ class Gui:
         this.selectDifficultyLabel.addEventListener(this)
         this.buttons.append(this.selectDifficultyLabel)
 
-        this.diffEasyButton = Button.Button(["Bogos Binted", "(Dumb)"], 200, 500, 100, 50, isVisible=False, fillColor=LIGHTER_BLUE)
+        this.diffEasyButton = Button.Button(["Moby", "(Dumb)"], 200, 500, 100, 50, isVisible=False, fillColor=LIGHTER_BLUE)
         this.diffEasyButton.addEventListener(this)
         this.diffEasyButton.isDisabled = True
         this.buttons.append(this.diffEasyButton)
 
-        this.diffMediumButton = Button.Button(["Moby", "(Alive)"], 300, 500, 100, 50, isVisible=False, fillColor=LIGHTER_BLUE)
+        this.diffMediumButton = Button.Button(["R2-D2", "(Alive)"], 300, 500, 100, 50, isVisible=False, fillColor=LIGHTER_BLUE)
         this.diffMediumButton.addEventListener(this)
         this.buttons.append(this.diffMediumButton)
 
-        this.diffHardButton = Button.Button(["Wall-E", "(Smart Fella)"], 400, 500, 100, 50, isVisible=False, fillColor=LIGHTER_BLUE)
+        this.diffHardButton = Button.Button(["Optimus Prime", "(Smart Fella)"], 400, 500, 100, 50, isVisible=False, fillColor=LIGHTER_BLUE)
         this.diffHardButton.addEventListener(this)
         this.buttons.append(this.diffHardButton)
 
-        this.diffEvilButton = Button.Button(["Stockfish", "(Evil)"], 500, 500, 100, 50, isVisible=False, fillColor=LIGHTER_BLUE)
+        this.diffEvilButton = Button.Button(["Terminator", "(Evil)"], 500, 500, 100, 50, isVisible=False, fillColor=LIGHTER_BLUE)
         this.diffEvilButton.addEventListener(this)
         this.buttons.append(this.diffEvilButton)
 
@@ -112,13 +112,16 @@ class Gui:
         this.continueButton.addEventListener(this)
         this.buttons.append(this.continueButton)
 
+        """this.backButton = Button.Button("Back", 50, 50, 100, 100, fontSize=18, isVisible=False, fillColor=LIGHTER_BLUE)
+        this.backButton.addEventListener(this)
+        this.buttons.append(this.backButton)"""
+
     async def gameLoop(this):
 
         running = True
         while running: 
 
-            this.drawSurface.fill(LIGHT_BLUE)
-            this.clock.tick(Constants.FPS)
+            
 
             mousePos = pygame.mouse.get_pos()
             mousePressed = pygame.mouse.get_pressed()
@@ -138,11 +141,22 @@ class Gui:
             this.WINDOW.blit(this.drawSurface, (0, 0))
             pygame.display.flip()
 
+            this.drawSurface.fill(LIGHT_BLUE)
+
+            if (pygame.key.get_pressed()[pygame.K_p]):
+
+                this.clock.tick(Constants.FPS * 5)
+            else:
+                
+                this.clock.tick(Constants.FPS)
+
             await asyncio.sleep(0)
 
     def eventFrom(this, trigger):
         
         if (trigger == this.playClankaButton):
+
+            this.gameManager.playAgainstClanka = True
 
             this.selectOrderLabel.isVisible = True
             this.playFirstButton.isVisible = True
@@ -164,6 +178,25 @@ class Gui:
             this.diffEvilButton.isVisible = True
 
             this.startButton.isVisible = True
+
+        if (trigger == this.playFriendButton):
+
+            
+
+            this.welcomeLabel.isVisible = False
+            this.playClankaButton.isVisible = False
+            this.playFriendButton.isVisible = False
+            this.explainLabel.isVisible = False
+
+            this.launchButton.isVisible = True
+            this.controlsLabel.isVisible = True
+
+            this.gameManager.gameMode = GameManager.PLAYER_DELIVERY
+
+            this.gameManager.playAgainstClanka = False
+            this.gameManager.plane.addPlayerStone(this.gameManager.player1)
+
+
         
         if (trigger == this.playFirstButton): 
             this.gameManager.playerGoesFirst = True
@@ -210,10 +243,17 @@ class Gui:
         if (trigger == this.startButton):
 
             if (this.gameManager.playerGoesFirst):
-                this.gameManager.gameMode = GameManager.CLANKA_SWEEPING
+                this.gameManager.gameMode = GameManager.PLAYER_DELIVERY
+                this.gameManager.plane.addPlayerStone(this.gameManager.currentTurn)
+
+                #print(this.gameManager.currentTurn.color)
+
                 this.launchButton.isVisible = True
             else:
-                this.gameManager.gameMode = GameManager.PLAYER_SWEEPING
+                this.gameManager.gameMode = GameManager.CLANKA_DELIVERY
+
+                this.gameManager.player2.stonesLeft -= 1
+                this.gameManager.plane.addclankaStone(this.gameManager.difficulty)
 
             
             this.selectOrderLabel.isVisible = False
@@ -240,13 +280,13 @@ class Gui:
             this.launchButton.isVisible = False
         
         if (trigger == "Win"):
-            this.continueButton.text = ["Red points this end: " + str(this.gameManager.plane.player.score), "You win!", "Click to go to main screen."]
+            this.continueButton.text = ["Player 1 points this end: " + str(this.gameManager.player1.score), "You win!", "Click to go to main screen."]
             this.continueButton.textColor = BLACK
             this.continueButton.isVisible = True
             
         if (trigger == "Lose"):
 
-            this.continueButton.text = ["Yellow points this end:" + str(-this.gameManager.plane.player.score), "You lose!", "Click to go to main screen."]
+            this.continueButton.text = ["Player 2 points this end: " + str(this.gameManager.player2.score), "You lose!", "Click to go to main screen."]
             this.continueButton.textColor = BLACK
             this.continueButton.isVisible = True
             
@@ -270,17 +310,19 @@ class Gui:
             this.clankaThinkingLabel.isVisible = True
             this.clankaThinkingLabel.draw(this.drawSurface)
             print("clanka think")
+
         if (trigger == "clankaStopThinking"):
             this.clankaThinkingLabel.isVisible = False
             this.clankaThinkingLabel.draw(this.drawSurface)
             print("clanka no think")
+
         if (trigger == "playerTurn"):
 
             this.controlsLabel.isVisible = True
             this.launchButton.isVisible = True
             
-        this.WINDOW.blit(this.drawSurface, (0, 0))
-        pygame.display.flip()
+        """this.WINDOW.blit(this.drawSurface, (0, 0))
+        pygame.display.flip()"""
 
 
             
